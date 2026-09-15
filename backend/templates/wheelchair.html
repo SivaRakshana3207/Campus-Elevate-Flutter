@@ -1,0 +1,4078 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AccessPathAI — Wheelchair Access Routes</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap"
+    rel="stylesheet"
+  >
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+
+    :root {
+      --bg: #fafafa;
+      --white: #ffffff;
+      --sidebar: #fcf9f9;
+
+      --text: #171717;
+      --muted: #6b6b6b;
+
+      --wine: #800020;
+      --wine-dark: #680019;
+      --wine-soft: #f6e9ed;
+
+      --green: #10b981;
+      --green-dark: #047857;
+      --green-soft: #ecfdf5;
+
+      --orange: #f59e0b;
+      --orange-soft: #fffbeb;
+
+      --red: #dc2626;
+      --red-dark: #b91c1c;
+      --red-soft: #fef2f2;
+
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+
+      --border: #e7e7e7;
+
+      --shadow: 0 8px 30px rgba(0, 0, 0, .05);
+
+      --font: "Plus Jakarta Sans", sans-serif;
+      --heading: "Space Grotesk", sans-serif;
+    }
+
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+
+    button,
+    select,
+    input {
+      font-family: inherit;
+    }
+
+
+    button {
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       TOP NAVBAR
+    ===================================================== */
+
+    nav.top-navbar {
+      height: 68px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 28px;
+
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      font-family: var(--heading);
+      font-size: 25px;
+      color: var(--wine);
+    }
+
+
+    .brand span {
+      color: #171717;
+    }
+
+
+    .brand svg {
+      width: 25px;
+      height: 25px;
+      stroke-width: 2.5;
+    }
+
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+
+    .gps-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 9px 15px;
+
+      border-radius: 999px;
+
+      background: var(--green-soft);
+      color: var(--green-dark);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+
+    .gps-dot {
+      width: 9px;
+      height: 9px;
+
+      border-radius: 50%;
+
+      background: var(--green);
+
+      box-shadow:
+        0 0 0 4px rgba(16, 185, 129, .12);
+    }
+
+
+    .gps-pill.error {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+
+    .gps-pill.error .gps-dot {
+      background: var(--red);
+    }
+
+
+    .lang-select {
+      width: 255px;
+      height: 44px;
+
+      border: 1px solid #ddd;
+      border-radius: 10px;
+
+      background: white;
+
+      padding: 0 14px;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      outline: none;
+    }
+
+
+    .lang-select:focus {
+      border-color: var(--wine);
+
+      box-shadow:
+        0 0 0 3px rgba(128, 0, 32, .08);
+    }
+
+
+
+    /* =====================================================
+       DASHBOARD
+    ===================================================== */
+
+    .dashboard {
+      min-height: calc(100vh - 68px);
+      display: flex;
+    }
+
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    aside {
+      width: 320px;
+      flex-shrink: 0;
+
+      background: var(--sidebar);
+
+      border-right: 1px solid var(--border);
+
+      padding: 30px 24px 20px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: .08em;
+
+      color: #656565;
+
+      margin-bottom: 17px;
+    }
+
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+
+    .menu-item {
+      width: 100%;
+      min-height: 57px;
+
+      border: none;
+      border-radius: 13px;
+
+      background: transparent;
+
+      display: flex;
+      align-items: center;
+
+      gap: 14px;
+
+      padding: 0 18px;
+
+      color: #1d1d1d;
+
+      font-size: 15px;
+      font-weight: 600;
+
+      text-align: left;
+
+      transition: .2s ease;
+    }
+
+
+    .menu-item svg {
+      width: 23px;
+      height: 23px;
+      flex-shrink: 0;
+    }
+
+
+    .menu-item:hover {
+      background: var(--wine-soft);
+      color: var(--wine);
+    }
+
+
+    .menu-item.active {
+      background: #f1e3e7;
+      color: var(--wine);
+    }
+
+
+    .sos-btn {
+      width: 100%;
+      min-height: 69px;
+
+      border: none;
+      border-radius: 14px;
+
+      background: #e52424;
+      color: white;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 10px;
+
+      font-size: 15px;
+      font-weight: 800;
+
+      box-shadow:
+        0 7px 18px rgba(220, 38, 38, .25);
+
+      transition: .2s ease;
+    }
+
+
+    .sos-btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+    }
+
+
+    .sos-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    main {
+      flex: 1;
+      min-width: 0;
+
+      padding: 30px;
+
+      background: var(--bg);
+    }
+
+
+    .main-inner {
+      max-width: 1500px;
+      margin: auto;
+    }
+
+
+
+    /* =====================================================
+       PAGE HEADER
+    ===================================================== */
+
+    .page-header {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 25px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 18px;
+    }
+
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+    }
+
+
+    .heading-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+
+    .heading-icon {
+      width: 58px;
+      height: 58px;
+
+      border-radius: 16px;
+
+      background: var(--wine-soft);
+      color: var(--wine);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    .heading-icon svg {
+      width: 30px;
+      height: 30px;
+    }
+
+
+    .heading-text h1 {
+      font-family: var(--heading);
+      font-size: 27px;
+      margin-bottom: 5px;
+    }
+
+
+    .heading-text p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+
+    .accessibility-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 10px 14px;
+
+      background: var(--green-soft);
+      color: var(--green-dark);
+
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: 800;
+
+      white-space: nowrap;
+    }
+
+
+
+    /* =====================================================
+       CONTROL CARD
+    ===================================================== */
+
+    .control-card {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 23px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 18px;
+    }
+
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+
+      font-size: 17px;
+      font-weight: 800;
+
+      margin-bottom: 18px;
+    }
+
+
+    .section-title svg {
+      color: var(--wine);
+
+      width: 22px;
+      height: 22px;
+    }
+
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+
+    .field label {
+      display: block;
+
+      font-size: 12px;
+      color: #666;
+
+      font-weight: 700;
+
+      margin-bottom: 7px;
+    }
+
+
+    .field select {
+      width: 100%;
+      height: 52px;
+
+      border: 1px solid #ddd;
+      border-radius: 11px;
+
+      padding: 0 14px;
+
+      background: white;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      outline: none;
+    }
+
+
+    .field select:focus {
+      border-color: var(--wine);
+
+      box-shadow:
+        0 0 0 3px rgba(128, 0, 32, .07);
+    }
+
+
+
+    /* =====================================================
+       ACCESSIBILITY OPTIONS
+    ===================================================== */
+
+    .route-options {
+      margin-top: 18px;
+
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+
+    .option {
+      border: 1px solid #ddd;
+
+      background: white;
+
+      border-radius: 10px;
+
+      padding: 10px 13px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      color: #444;
+
+      transition: .2s ease;
+    }
+
+
+    .option:hover {
+      border-color: #bbb;
+      transform: translateY(-1px);
+    }
+
+
+    .option.active {
+      border-color: #c9f4e3;
+
+      background: var(--green-soft);
+
+      color: var(--green-dark);
+    }
+
+
+    .option svg {
+      width: 17px;
+      height: 17px;
+    }
+
+
+
+    /* =====================================================
+       FIND ROUTE BUTTON
+    ===================================================== */
+
+    .find-route-btn {
+      width: 100%;
+      height: 55px;
+
+      margin-top: 18px;
+
+      border: none;
+      border-radius: 11px;
+
+      background: var(--wine);
+      color: white;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 9px;
+
+      font-size: 14px;
+      font-weight: 800;
+
+      transition: .2s ease;
+    }
+
+
+    .find-route-btn:hover {
+      background: var(--wine-dark);
+      transform: translateY(-1px);
+    }
+
+
+    .find-route-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+
+
+    /* =====================================================
+       GPS CARD
+    ===================================================== */
+
+    .gps-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      padding: 14px 16px;
+
+      margin-top: 17px;
+
+      background: #fafafa;
+
+      border: 1px solid #eee;
+
+      border-radius: 12px;
+    }
+
+
+    .gps-info {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+
+    .gps-info svg {
+      color: var(--green-dark);
+
+      width: 21px;
+      height: 21px;
+    }
+
+
+    .gps-info strong {
+      display: block;
+
+      font-size: 13px;
+
+      margin-bottom: 2px;
+    }
+
+
+    .gps-info span {
+      color: #777;
+      font-size: 11px;
+    }
+
+
+    #gpsCoordinates {
+      font-size: 12px;
+      font-weight: 700;
+
+      color: #444;
+
+      text-align: right;
+    }
+
+
+
+    /* =====================================================
+       MESSAGE
+    ===================================================== */
+
+    .message {
+      display: none;
+
+      margin-top: 15px;
+
+      padding: 12px 15px;
+
+      border-radius: 10px;
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+
+    .message.show {
+      display: block;
+    }
+
+
+    .message.success {
+      color: var(--green-dark);
+
+      background: var(--green-soft);
+
+      border: 1px solid #c9f4e3;
+    }
+
+
+    .message.error {
+      color: #b91c1c;
+
+      background: var(--red-soft);
+
+      border: 1px solid #fecaca;
+    }
+
+
+
+    /* =====================================================
+       RESULT
+    ===================================================== */
+
+    #routeResult {
+      display: none;
+    }
+
+
+    .route-overview {
+      display: grid;
+
+      grid-template-columns: 1.3fr .7fr;
+
+      gap: 18px;
+
+      margin-bottom: 18px;
+    }
+
+
+    .route-card {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 22px;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .route-card h2 {
+      font-family: var(--heading);
+
+      font-size: 20px;
+
+      margin-bottom: 15px;
+    }
+
+
+    .destination-name {
+      color: var(--wine);
+    }
+
+
+    .route-stats {
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 10px;
+    }
+
+
+    .stat {
+      border: 1px solid #eee;
+
+      background: #fafafa;
+
+      border-radius: 11px;
+
+      padding: 13px;
+    }
+
+
+    .stat-label {
+      color: #777;
+
+      font-size: 10px;
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      margin-bottom: 5px;
+    }
+
+
+    .stat-value {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+
+
+    /* =====================================================
+       SCORE
+    ===================================================== */
+
+    .score-card {
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: center;
+
+      text-align: center;
+
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 22px;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .score-circle {
+      width: 100px;
+      height: 100px;
+
+      border-radius: 50%;
+
+      border: 8px solid #d1fae5;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: center;
+
+      margin-bottom: 10px;
+    }
+
+
+    .score-number {
+      font-family: var(--heading);
+
+      font-size: 27px;
+
+      color: var(--green-dark);
+    }
+
+
+    .score-percent {
+      font-size: 10px;
+
+      color: #777;
+
+      font-weight: 700;
+    }
+
+
+    .score-card h3 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+
+    .score-card p {
+      color: #777;
+
+      font-size: 11px;
+
+      line-height: 1.5;
+
+      max-width: 240px;
+    }
+
+
+
+    /* =====================================================
+       ROUTE STEPS
+    ===================================================== */
+
+    .route-steps {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 22px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 18px;
+    }
+
+
+    .step {
+      display: flex;
+
+      gap: 14px;
+
+      position: relative;
+
+      padding-bottom: 19px;
+    }
+
+
+    .step:last-child {
+      padding-bottom: 0;
+    }
+
+
+    .step:not(:last-child)::after {
+      content: "";
+
+      position: absolute;
+
+      left: 18px;
+
+      top: 39px;
+
+      bottom: 0;
+
+      width: 2px;
+
+      background: #e5e7eb;
+    }
+
+
+    .step-icon {
+      width: 38px;
+      height: 38px;
+
+      flex-shrink: 0;
+
+      border-radius: 50%;
+
+      background: var(--green-soft);
+      color: var(--green-dark);
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      position: relative;
+
+      z-index: 2;
+    }
+
+
+    .step-icon svg {
+      width: 19px;
+      height: 19px;
+    }
+
+
+    .step-content {
+      padding-top: 2px;
+    }
+
+
+    .step-content strong {
+      display: block;
+
+      font-size: 13px;
+
+      margin-bottom: 4px;
+    }
+
+
+    .step-content span {
+      color: #777;
+
+      font-size: 12px;
+
+      line-height: 1.6;
+    }
+
+
+
+    /* =====================================================
+       FEATURES
+    ===================================================== */
+
+    .features-card {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      padding: 22px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 18px;
+    }
+
+
+    .features {
+      display: grid;
+
+      grid-template-columns: repeat(4, 1fr);
+
+      gap: 12px;
+    }
+
+
+    .feature {
+      border: 1px solid #eee;
+
+      border-radius: 12px;
+
+      padding: 15px;
+
+      background: #fafafa;
+    }
+
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 10px;
+
+      background: var(--blue-soft);
+      color: var(--blue);
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 10px;
+    }
+
+
+    .feature-icon svg {
+      width: 19px;
+      height: 19px;
+    }
+
+
+    .feature strong {
+      display: block;
+
+      font-size: 12px;
+
+      margin-bottom: 4px;
+    }
+
+
+    .feature span {
+      color: #777;
+
+      font-size: 11px;
+
+      line-height: 1.5;
+    }
+
+
+
+    /* =====================================================
+       ACTION BUTTONS
+    ===================================================== */
+
+    .action-row {
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 12px;
+
+      margin-top: 18px;
+    }
+
+
+    .google-btn,
+    .voice-btn,
+    .back-btn {
+      height: 53px;
+
+      border-radius: 11px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 9px;
+
+      font-size: 13px;
+
+      font-weight: 800;
+
+      text-decoration: none;
+    }
+
+
+    .google-btn {
+      background: var(--wine);
+
+      color: white;
+
+      border: none;
+    }
+
+
+    .google-btn:hover {
+      background: var(--wine-dark);
+    }
+
+
+    .voice-btn {
+      background: white;
+
+      color: var(--wine);
+
+      border: 1px solid #ddd;
+    }
+
+
+    .voice-btn:hover {
+      background: var(--wine-soft);
+    }
+
+
+    .bottom-actions {
+      margin-top: 18px;
+    }
+
+
+    .back-btn {
+      width: 100%;
+
+      background: #f5f5f5;
+
+      color: #333;
+
+      border: 1px solid #ddd;
+
+      transition: .2s ease;
+    }
+
+
+    .back-btn:hover {
+      background: var(--wine-soft);
+
+      color: var(--wine);
+    }
+
+
+
+    /* =====================================================
+       DISCLAIMER
+    ===================================================== */
+
+    .route-note {
+      margin-top: 18px;
+
+      padding: 13px 15px;
+
+      border-radius: 11px;
+
+      background: var(--orange-soft);
+
+      border: 1px solid #fde68a;
+
+      color: #92400e;
+
+      font-size: 11px;
+
+      line-height: 1.6;
+    }
+
+
+
+    /* =====================================================
+       MOBILE BOTTOM NAVIGATION
+    ===================================================== */
+
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+
+
+    /* =====================================================
+       TABLET
+    ===================================================== */
+
+    @media (max-width: 1000px) {
+
+      aside {
+        width: 250px;
+      }
+
+      .features {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .route-overview {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (max-width: 800px) {
+
+      body {
+        overflow-x: hidden;
+
+        padding-bottom: 82px;
+      }
+
+
+      aside {
+        display: none;
+      }
+
+
+      main {
+        padding: 15px;
+      }
+
+
+      .route-grid {
+        grid-template-columns: 1fr;
+      }
+
+
+      .route-stats {
+        grid-template-columns: 1fr;
+      }
+
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+
+      .action-row {
+        grid-template-columns: 1fr;
+      }
+
+
+      .gps-pill {
+        display: none;
+      }
+
+
+      .lang-select {
+        width: 170px;
+      }
+
+
+      nav.top-navbar {
+        padding: 0 15px;
+      }
+
+
+      /* ================================================
+         MOBILE BOTTOM NAV
+      ================================================ */
+
+      .mobile-bottom-nav {
+        display: flex;
+
+        position: fixed !important;
+
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        top: auto !important;
+
+        width: 100%;
+
+        height: 76px;
+
+        background: rgba(255, 255, 255, .98);
+
+        border-top: 1px solid #e5e5e5;
+
+        box-shadow:
+          0 -8px 25px rgba(0, 0, 0, .08);
+
+        z-index: 99999;
+
+        padding:
+          6px 5px
+          calc(6px + env(safe-area-inset-bottom));
+
+        justify-content: space-around;
+
+        align-items: stretch;
+      }
+
+
+      .mobile-nav-item {
+        flex: 1;
+
+        max-width: 100px;
+
+        border: none;
+
+        background: transparent;
+
+        border-radius: 12px;
+
+        color: #777;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 4px;
+
+        font-size: 8px;
+
+        font-weight: 700;
+
+        line-height: 1;
+
+        transition:
+          background .2s ease,
+          color .2s ease,
+          transform .15s ease;
+      }
+
+
+      .mobile-nav-item svg {
+        width: 21px;
+        height: 21px;
+
+        stroke-width: 2.2;
+      }
+
+
+      .mobile-nav-item:active {
+        transform: scale(.94);
+      }
+
+
+      .mobile-nav-item:hover {
+        background: #fafafa;
+      }
+
+
+      .mobile-nav-item.active {
+        background: var(--wine-soft);
+
+        color: var(--wine);
+      }
+
+
+      .mobile-nav-item.sos-item {
+        color: var(--red);
+      }
+
+
+      .mobile-nav-item.sos-item:hover {
+        background: var(--red-soft);
+      }
+
+
+      .mobile-nav-item.sos-item svg {
+        color: var(--red);
+      }
+
+    }
+
+
+
+    /* =====================================================
+       SMALL MOBILE
+    ===================================================== */
+
+    @media (max-width: 520px) {
+
+      .brand {
+        font-size: 20px;
+      }
+
+
+      .lang-select {
+        width: 140px;
+        font-size: 12px;
+      }
+
+
+      .header-top {
+        align-items: flex-start;
+      }
+
+
+      .accessibility-badge {
+        display: none;
+      }
+
+
+      .heading-text h1 {
+        font-size: 22px;
+      }
+
+
+      .heading-text p {
+        font-size: 12px;
+      }
+
+
+      .heading-icon {
+        width: 50px;
+        height: 50px;
+      }
+
+
+      .route-options {
+        flex-direction: column;
+      }
+
+
+      .option {
+        width: 100%;
+      }
+
+
+      .gps-card {
+        align-items: flex-start;
+
+        flex-direction: column;
+      }
+
+
+      #gpsCoordinates {
+        text-align: left;
+      }
+
+
+      .mobile-bottom-nav {
+        height: 70px;
+      }
+
+
+      .mobile-nav-item {
+        font-size: 7px;
+
+        border-radius: 10px;
+      }
+
+
+      .mobile-nav-item svg {
+        width: 20px;
+        height: 20px;
+      }
+
+    }
+
+
+
+    /* =====================================================
+       VERY SMALL MOBILE
+    ===================================================== */
+
+    @media (max-width: 360px) {
+
+      .mobile-bottom-nav {
+        height: 68px;
+      }
+
+
+      .mobile-nav-item {
+        font-size: 6.5px;
+      }
+
+
+      .mobile-nav-item svg {
+        width: 18px;
+        height: 18px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     TOP NAVBAR
+===================================================== -->
+
+<nav class="top-navbar">
+
+  <div class="brand">
+
+    <i data-lucide="compass"></i>
+
+    AccessPath<span>AI</span>
+
+  </div>
+
+
+  <div class="nav-right">
+
+    <div
+      class="gps-pill"
+      id="gpsPill"
+    >
+
+      <span class="gps-dot"></span>
+
+      <span id="gpsStatus">
+        GPS Locating...
+      </span>
+
+    </div>
+
+
+    <select
+      class="lang-select"
+      id="languagePicker"
+      aria-label="Select language"
+    >
+
+      <option value="en-IN">
+        English (India)
+      </option>
+
+      <option value="ta-IN">
+        தமிழ் (Tamil)
+      </option>
+
+      <option value="hi-IN">
+        हिन्दी (Hindi)
+      </option>
+
+      <option value="te-IN">
+        తెలుగు (Telugu)
+      </option>
+
+      <option value="kn-IN">
+        ಕನ್ನಡ (Kannada)
+      </option>
+
+      <option value="ml-IN">
+        മലയാളം (Malayalam)
+      </option>
+
+    </select>
+
+  </div>
+
+</nav>
+
+
+
+<div class="dashboard">
+
+
+<!-- =====================================================
+     DESKTOP SIDEBAR
+===================================================== -->
+
+<aside>
+
+  <div>
+
+    <div class="sidebar-title">
+      Navigation Dashboard
+    </div>
+
+
+    <div class="menu">
+
+      <button
+        class="menu-item"
+        type="button"
+        onclick="goTo('index.html')"
+      >
+
+        <i data-lucide="bot"></i>
+
+        AI Voice Assistant
+
+      </button>
+
+      <button
+        class="menu-item"
+        type="button"
+        onclick="goTo('virtual.html')"
+      >
+
+        <i data-lucide="eye"></i>
+
+        Visual AI Guidance
+
+      </button>
+
+      <button
+        class="menu-item active"
+        type="button"
+        aria-current="page"
+      >
+
+        <i data-lucide="accessibility"></i>
+
+        Wheelchair Access Routes
+
+      </button>
+
+      <button
+        class="menu-item"
+        type="button"
+        onclick="goTo('shuttle.html')"
+      >
+
+        <i data-lucide="bus"></i>
+
+        Campus Shuttle Live
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- DESKTOP SOS -->
+
+  <button
+    class="sos-btn"
+    type="button"
+    onclick="triggerSOS()"
+  >
+
+    <i data-lucide="alert-triangle"></i>
+
+    EMERGENCY SOS
+
+  </button>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main>
+
+<div class="main-inner">
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<section class="page-header">
+
+  <div class="header-top">
+
+    <div class="heading-left">
+
+      <div class="heading-icon">
+
+        <i data-lucide="accessibility"></i>
+
+      </div>
+
+
+      <div class="heading-text">
+
+        <h1>
+          Wheelchair Access Routes
+        </h1>
+
+        <p>
+          Find step-free and wheelchair-friendly routes
+          across the Sathyabama University campus.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="accessibility-badge">
+
+      <i data-lucide="check-circle"></i>
+
+      Step-Free Route Mode
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     ROUTE PLANNER
+===================================================== -->
+
+<section class="control-card">
+
+  <div class="section-title">
+
+    <i data-lucide="route"></i>
+
+    Accessible Route Planner
+
+  </div>
+
+
+  <div class="route-grid">
+
+
+    <!-- START -->
+
+    <div class="field">
+
+      <label for="startPoint">
+        STARTING POINT
+      </label>
+
+      <select id="startPoint">
+
+        <option value="current">
+          Current GPS Location
+        </option>
+
+        <option value="Main Gate">
+          Main Gate
+        </option>
+
+        <option value="Central Library">
+          Central Library
+        </option>
+
+        <option value="Admin Block">
+          Admin Block
+        </option>
+
+        <option value="CSE Block">
+          CSE Block
+        </option>
+
+        <option value="Auditorium">
+          Auditorium
+        </option>
+
+        <option value="Canteen">
+          Canteen
+        </option>
+
+      </select>
+
+    </div>
+
+
+
+    <!-- DESTINATION -->
+
+    <div class="field">
+
+      <label for="destination">
+        DESTINATION
+      </label>
+
+      <select id="destination">
+
+        <option value="">
+          Select destination
+        </option>
+
+        <option value="Central Library">
+          Central Library
+        </option>
+
+        <option value="Admin Block">
+          Admin Block
+        </option>
+
+        <option value="CSE Block">
+          CSE Block
+        </option>
+
+        <option value="ECE Block">
+          ECE Block
+        </option>
+
+        <option value="EEE Block">
+          EEE Block
+        </option>
+
+        <option value="Mechanical Block">
+          Mechanical Block
+        </option>
+
+        <option value="Civil Block">
+          Civil Block
+        </option>
+
+        <option value="Auditorium">
+          Auditorium
+        </option>
+
+        <option value="Seminar Hall">
+          Seminar Hall
+        </option>
+
+        <option value="Canteen">
+          Canteen
+        </option>
+
+        <option value="Medical Centre">
+          Medical Centre
+        </option>
+
+        <option value="Placement Cell">
+          Placement Cell
+        </option>
+
+        <option value="Main Gate">
+          Main Gate
+        </option>
+
+        <option value="Parking">
+          Accessible Parking
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ACCESSIBILITY OPTIONS -->
+
+  <div class="route-options">
+
+
+    <button
+      class="option active"
+      type="button"
+      id="rampOption"
+      onclick="toggleOption(this)"
+    >
+
+      <i data-lucide="move-up"></i>
+
+      Prefer ramps
+
+    </button>
+
+
+    <button
+      class="option active"
+      type="button"
+      id="stairsOption"
+      onclick="toggleOption(this)"
+    >
+
+      <i data-lucide="ban"></i>
+
+      Avoid stairs
+
+    </button>
+
+
+    <button
+      class="option active"
+      type="button"
+      id="elevatorOption"
+      onclick="toggleOption(this)"
+    >
+
+      <i data-lucide="arrow-up-down"></i>
+
+      Use elevators
+
+    </button>
+
+
+    <button
+      class="option active"
+      type="button"
+      id="wideOption"
+      onclick="toggleOption(this)"
+    >
+
+      <i data-lucide="maximize"></i>
+
+      Wide paths
+
+    </button>
+
+  </div>
+
+
+
+  <!-- FIND ROUTE -->
+
+  <button
+    class="find-route-btn"
+    type="button"
+    onclick="findAccessibleRoute()"
+  >
+
+    <i data-lucide="route"></i>
+
+    Find Accessible Route
+
+  </button>
+
+
+
+  <!-- GPS -->
+
+  <div class="gps-card">
+
+    <div class="gps-info">
+
+      <i data-lucide="navigation"></i>
+
+      <div>
+
+        <strong>
+          Current GPS Location
+        </strong>
+
+        <span>
+          High accuracy browser location
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div id="gpsCoordinates">
+      Acquiring...
+    </div>
+
+  </div>
+
+
+
+  <!-- MESSAGE -->
+
+  <div
+    id="message"
+    class="message"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+</section>
+
+
+
+<!-- =====================================================
+     RESULT
+===================================================== -->
+
+<section id="routeResult">
+
+
+  <!-- ROUTE OVERVIEW -->
+
+  <div class="route-overview">
+
+
+    <!-- ROUTE CARD -->
+
+    <div class="route-card">
+
+      <h2>
+
+        Accessible route to
+
+        <span
+          class="destination-name"
+          id="resultDestination"
+        >
+          —
+        </span>
+
+      </h2>
+
+
+      <div class="route-stats">
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Route
+          </div>
+
+          <div
+            class="stat-value"
+            id="routeType"
+          >
+            Step-Free
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Estimated Distance
+          </div>
+
+          <div
+            class="stat-value"
+            id="routeDistance"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Accessibility
+          </div>
+
+          <div
+            class="stat-value"
+            id="routeAccess"
+          >
+            Wheelchair Friendly
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- ACTIONS -->
+
+      <div class="action-row">
+
+
+        <a
+          id="googleNavigation"
+          class="google-btn"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+
+          <i data-lucide="map"></i>
+
+          Open Navigation
+
+        </a>
+
+
+        <button
+          class="voice-btn"
+          type="button"
+          onclick="speakRoute()"
+        >
+
+          <i data-lucide="volume-2"></i>
+
+          Speak Route
+
+        </button>
+
+      </div>
+
+
+
+      <!-- NOTE -->
+
+      <div class="route-note">
+
+        <strong>Navigation note:</strong>
+
+        Google Maps is provided as a navigation fallback.
+        Its walking route is not independently verified as
+        wheelchair accessible. Follow the accessibility
+        instructions shown by AccessPathAI.
+
+      </div>
+
+    </div>
+
+
+
+    <!-- SCORE -->
+
+    <div class="score-card">
+
+      <div class="score-circle">
+
+        <div
+          class="score-number"
+          id="score"
+        >
+          —
+        </div>
+
+        <div class="score-percent">
+          /100
+        </div>
+
+      </div>
+
+
+      <h3>
+        Accessibility Score
+      </h3>
+
+
+      <p>
+        Based on the configured step-free,
+        ramp and pathway information.
+      </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       ROUTE STEPS
+  ===================================================== -->
+
+  <div class="route-steps">
+
+    <div class="section-title">
+
+      <i data-lucide="list-checks"></i>
+
+      Recommended Accessible Path
+
+    </div>
+
+
+    <div id="stepsContainer"></div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       FEATURES
+  ===================================================== -->
+
+  <div class="features-card">
+
+    <div class="section-title">
+
+      <i data-lucide="accessibility"></i>
+
+      Route Accessibility Information
+
+    </div>
+
+
+    <div class="features">
+
+
+      <div class="feature">
+
+        <div class="feature-icon">
+
+          <i data-lucide="move-up"></i>
+
+        </div>
+
+        <strong>
+          Ramp Access
+        </strong>
+
+        <span>
+          Prioritizes ramp-accessible entrances
+          when the option is enabled.
+        </span>
+
+      </div>
+
+
+      <div class="feature">
+
+        <div class="feature-icon">
+
+          <i data-lucide="ban"></i>
+
+        </div>
+
+        <strong>
+          No Stairs
+        </strong>
+
+        <span>
+          Recommended route instructions are
+          designed around step-free movement.
+        </span>
+
+      </div>
+
+
+      <div class="feature">
+
+        <div class="feature-icon">
+
+          <i data-lucide="maximize"></i>
+
+        </div>
+
+        <strong>
+          Wide Path
+        </strong>
+
+        <span>
+          Prefer wider campus pathways where
+          accessibility data is available.
+        </span>
+
+      </div>
+
+
+      <div class="feature">
+
+        <div class="feature-icon">
+
+          <i data-lucide="volume-2"></i>
+
+        </div>
+
+        <strong>
+          Voice Guidance
+        </strong>
+
+        <span>
+          Listen to the complete route using
+          browser text-to-speech.
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       BOTTOM ACTION
+  ===================================================== -->
+
+  <div class="bottom-actions">
+
+    <button
+      class="back-btn"
+      type="button"
+      onclick="goTo('index.html')"
+    >
+
+      <i data-lucide="arrow-left"></i>
+
+      Back to AI Voice Assistant
+
+    </button>
+
+  </div>
+
+
+</section>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+
+<!-- =====================================================
+     MOBILE BOTTOM NAVIGATION
+===================================================== -->
+
+<nav
+  class="mobile-bottom-nav"
+  aria-label="Mobile navigation"
+>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="AI Voice Assistant"
+      onclick="goTo('index.html')"
+    >
+
+      <i data-lucide="bot"></i>
+
+      <span>
+        Voice
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Visual AI Guidance"
+      onclick="goTo('virtual.html')"
+    >
+
+      <i data-lucide="eye"></i>
+
+      <span>
+        Visual
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item active"
+      type="button"
+      aria-label="Wheelchair Access Routes"
+      aria-current="page"
+    >
+
+      <i data-lucide="accessibility"></i>
+
+      <span>
+        Wheelchair
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Campus Shuttle Live"
+      onclick="goTo('shuttle.html')"
+    >
+
+      <i data-lucide="bus"></i>
+
+      <span>
+        Shuttle
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item sos-item"
+      type="button"
+      aria-label="Emergency SOS"
+      onclick="triggerSOS()"
+    >
+
+      <i data-lucide="alert-triangle"></i>
+
+      <span>
+        SOS
+      </span>
+
+    </button>
+
+  </nav>
+
+
+  <script>
+
+/* =========================================================
+   ACCESSPATH AI
+   WHEELCHAIR ACCESS ROUTE MODULE
+========================================================= */
+
+
+/* =========================================================
+   INITIALIZE LUCIDE
+========================================================= */
+
+lucide.createIcons();
+
+
+
+/* =========================================================
+   APPLICATION STATE
+========================================================= */
+
+let userLat = null;
+let userLng = null;
+
+let currentDestination = "";
+
+let gpsWatchId = null;
+
+
+
+/* =========================================================
+   CAMPUS
+========================================================= */
+
+const CAMPUS_ADDRESS =
+  "Sathyabama University, " +
+  "Sathyabama Campus Rd, " +
+  "Kamaraj Nagar, Semmancheri, " +
+  "Chennai, Tamil Nadu 600119";
+
+
+
+/* =========================================================
+   ACCESSIBLE ROUTE DATA
+========================================================= */
+
+const accessibleRoutes = {
+
+  "Central Library": {
+
+    distance: "Approx. 650 m",
+
+    score: 96,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the main accessible campus pathway."
+      ],
+
+      [
+        "move-up",
+        "Use the designated ramp",
+        "Avoid nearby stairs and continue through the ramp-accessible entrance."
+      ],
+
+      [
+        "maximize",
+        "Continue on the wider pathway",
+        "Keep to the accessible pedestrian path toward the library."
+      ],
+
+      [
+        "library",
+        "Central Library",
+        "Enter through the accessible entrance."
+      ]
+
+    ]
+
+  },
+
+
+  "Admin Block": {
+
+    distance: "Approx. 450 m",
+
+    score: 94,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the main campus pathway."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Avoid stairs and use the step-free entrance."
+      ],
+
+      [
+        "building",
+        "Approach Admin Block",
+        "Continue toward the accessible entrance."
+      ],
+
+      [
+        "check-circle",
+        "Admin Block",
+        "Use the accessible entrance."
+      ]
+
+    ]
+
+  },
+
+
+  "CSE Block": {
+
+    distance: "Approx. 800 m",
+
+    score: 93,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the main pedestrian route."
+      ],
+
+      [
+        "maximize",
+        "Continue along the wide pathway",
+        "Avoid narrow side paths."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Avoid staircase sections."
+      ],
+
+      [
+        "building",
+        "CSE Block",
+        "Enter using the accessible entrance."
+      ]
+
+    ]
+
+  },
+
+
+  "ECE Block": {
+
+    distance: "Approx. 850 m",
+
+    score: 92,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the main accessible campus road."
+      ],
+
+      [
+        "ban",
+        "Avoid stairs",
+        "Continue using the ground-level pathway."
+      ],
+
+      [
+        "move-up",
+        "Use ramp",
+        "Take the ramp toward the building entrance."
+      ],
+
+      [
+        "check-circle",
+        "ECE Block",
+        "Accessible destination reached."
+      ]
+
+    ]
+
+  },
+
+
+  "EEE Block": {
+
+    distance: "Approx. 900 m",
+
+    score: 92,
+
+    steps: [
+
+      [
+        "navigation",
+        "Begin accessible navigation",
+        "Follow the main campus pathway."
+      ],
+
+      [
+        "maximize",
+        "Use wider path",
+        "Avoid narrow pedestrian routes."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Avoid stairs."
+      ],
+
+      [
+        "check-circle",
+        "EEE Block",
+        "Continue to the accessible entrance."
+      ]
+
+    ]
+
+  },
+
+
+  "Mechanical Block": {
+
+    distance: "Approx. 1.0 km",
+
+    score: 90,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the main campus route."
+      ],
+
+      [
+        "maximize",
+        "Use wide pathway",
+        "Remain on the accessible road."
+      ],
+
+      [
+        "move-up",
+        "Use ramp",
+        "Avoid staircase access."
+      ],
+
+      [
+        "check-circle",
+        "Mechanical Block",
+        "Destination reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Civil Block": {
+
+    distance: "Approx. 950 m",
+
+    score: 91,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the accessible pathway."
+      ],
+
+      [
+        "ban",
+        "Avoid stairs",
+        "Remain on ground-level access paths."
+      ],
+
+      [
+        "move-up",
+        "Use ramp entrance",
+        "Continue toward Civil Block."
+      ],
+
+      [
+        "check-circle",
+        "Civil Block",
+        "Accessible entrance reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Auditorium": {
+
+    distance: "Approx. 700 m",
+
+    score: 95,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the main accessible campus route."
+      ],
+
+      [
+        "maximize",
+        "Continue on wide path",
+        "Avoid narrow side routes."
+      ],
+
+      [
+        "move-up",
+        "Use accessible ramp",
+        "Approach the auditorium entrance."
+      ],
+
+      [
+        "check-circle",
+        "Auditorium",
+        "Use the accessible entrance."
+      ]
+
+    ]
+
+  },
+
+
+  "Seminar Hall": {
+
+    distance: "Approx. 750 m",
+
+    score: 94,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the accessible campus route."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Avoid stairs."
+      ],
+
+      [
+        "maximize",
+        "Follow the wider corridor",
+        "Continue toward the seminar hall."
+      ],
+
+      [
+        "check-circle",
+        "Seminar Hall",
+        "Destination reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Canteen": {
+
+    distance: "Approx. 500 m",
+
+    score: 93,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the main pedestrian path."
+      ],
+
+      [
+        "maximize",
+        "Use wide pathway",
+        "Continue toward the canteen."
+      ],
+
+      [
+        "move-up",
+        "Use ramp",
+        "Avoid steps near the entrance."
+      ],
+
+      [
+        "check-circle",
+        "Canteen",
+        "Accessible entrance reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Medical Centre": {
+
+    distance: "Approx. 600 m",
+
+    score: 97,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the main accessible route."
+      ],
+
+      [
+        "maximize",
+        "Continue along the wide path",
+        "Keep to the accessible pedestrian route."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Avoid stairs."
+      ],
+
+      [
+        "heart-pulse",
+        "Medical Centre",
+        "Accessible entrance reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Placement Cell": {
+
+    distance: "Approx. 700 m",
+
+    score: 94,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start from your current location",
+        "Follow the accessible campus pathway."
+      ],
+
+      [
+        "ban",
+        "Avoid stairs",
+        "Continue on the step-free route."
+      ],
+
+      [
+        "move-up",
+        "Use ramp access",
+        "Approach the building."
+      ],
+
+      [
+        "check-circle",
+        "Placement Cell",
+        "Accessible entrance reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Main Gate": {
+
+    distance: "Approx. 400 m",
+
+    score: 98,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the main accessible pathway."
+      ],
+
+      [
+        "maximize",
+        "Continue on the wide campus road",
+        "Remain on the designated accessible route."
+      ],
+
+      [
+        "check-circle",
+        "Main Gate",
+        "Accessible campus exit reached."
+      ]
+
+    ]
+
+  },
+
+
+  "Parking": {
+
+    distance: "Approx. 350 m",
+
+    score: 96,
+
+    steps: [
+
+      [
+        "navigation",
+        "Start navigation",
+        "Follow the campus vehicle-accessible route."
+      ],
+
+      [
+        "maximize",
+        "Use the wider access road",
+        "Avoid narrow pedestrian paths."
+      ],
+
+      [
+        "accessibility",
+        "Accessible Parking",
+        "Use the designated wheelchair parking area."
+      ]
+
+    ]
+
+  }
+
+};
+
+
+
+/* =========================================================
+   GPS
+========================================================= */
+
+function startGPS() {
+
+  if (!navigator.geolocation) {
+
+    setGPSStatus(
+      "GPS unavailable",
+      true
+    );
+
+    document.getElementById(
+      "gpsCoordinates"
+    ).innerText =
+      "GPS not supported";
+
+    return;
+  }
+
+
+  gpsWatchId =
+    navigator.geolocation.watchPosition(
+
+      function(position) {
+
+        userLat =
+          position.coords.latitude;
+
+        userLng =
+          position.coords.longitude;
+
+
+        document.getElementById(
+          "gpsCoordinates"
+        ).innerText =
+
+          userLat.toFixed(6) +
+          ", " +
+          userLng.toFixed(6);
+
+
+        setGPSStatus(
+          "GPS Live",
+          false
+        );
+
+      },
+
+
+      function(error) {
+
+        console.error(
+          "GPS error:",
+          error
+        );
+
+
+        setGPSStatus(
+          "GPS unavailable",
+          true
+        );
+
+
+        document.getElementById(
+          "gpsCoordinates"
+        ).innerText =
+          "Allow location access";
+
+      },
+
+
+      {
+
+        enableHighAccuracy: true,
+
+        maximumAge: 3000,
+
+        timeout: 15000
+
+      }
+
+    );
+
+}
+
+
+
+/* =========================================================
+   GPS STATUS
+========================================================= */
+
+function setGPSStatus(
+  text,
+  error
+) {
+
+  document.getElementById(
+    "gpsStatus"
+  ).innerText =
+    text;
+
+
+  const pill =
+    document.getElementById(
+      "gpsPill"
+    );
+
+
+  if (error) {
+
+    pill.classList.add(
+      "error"
+    );
+
+  } else {
+
+    pill.classList.remove(
+      "error"
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   LOAD DESTINATION FROM INDEX.HTML
+========================================================= */
+
+function loadPassedDestination() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  let destination =
+    params.get("destination") ||
+    sessionStorage.getItem(
+      "accessPathDestination"
+    ) ||
+    localStorage.getItem(
+      "accessPathDestination"
+    ) ||
+    "";
+
+
+  if (!destination) {
+    return;
+  }
+
+
+  destination =
+    destination.trim();
+
+
+  const destinationSelect =
+    document.getElementById(
+      "destination"
+    );
+
+
+  const matchingOption =
+    Array.from(
+      destinationSelect.options
+    ).find(
+      option =>
+        option.value.toLowerCase() ===
+        destination.toLowerCase()
+    );
+
+
+  if (matchingOption) {
+
+    destinationSelect.value =
+      matchingOption.value;
+
+
+    setTimeout(
+      function() {
+
+        findAccessibleRoute();
+
+      },
+      400
+    );
+
+  } else {
+
+    showMessage(
+      "Destination received: " +
+      destination +
+      ". Please select a supported campus destination.",
+      true
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   FIND ACCESSIBLE ROUTE
+========================================================= */
+
+function findAccessibleRoute() {
+
+  const destination =
+    document.getElementById(
+      "destination"
+    ).value;
+
+
+  if (!destination) {
+
+    showMessage(
+      "Please select a destination.",
+      true
+    );
+
+    return;
+  }
+
+
+  currentDestination =
+    destination;
+
+
+  const route =
+    accessibleRoutes[
+      destination
+    ];
+
+
+  if (!route) {
+
+    showMessage(
+      "Accessible route data is not available for this destination.",
+      true
+    );
+
+    return;
+  }
+
+
+  localStorage.setItem(
+    "accessPathDestination",
+    destination
+  );
+
+
+  sessionStorage.setItem(
+    "accessPathDestination",
+    destination
+  );
+
+
+  document.getElementById(
+    "resultDestination"
+  ).innerText =
+    destination;
+
+
+  document.getElementById(
+    "routeDistance"
+  ).innerText =
+    route.distance;
+
+
+  document.getElementById(
+    "score"
+  ).innerText =
+    route.score;
+
+
+  document.getElementById(
+    "routeType"
+  ).innerText =
+    "Step-Free";
+
+
+  document.getElementById(
+    "routeAccess"
+  ).innerText =
+    "Wheelchair Friendly";
+
+
+
+  /* =====================================================
+     ROUTE STEPS
+  ===================================================== */
+
+  const container =
+    document.getElementById(
+      "stepsContainer"
+    );
+
+
+  container.innerHTML = "";
+
+
+  route.steps.forEach(
+    function(step) {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "step";
+
+
+      div.innerHTML = `
+
+        <div class="step-icon">
+
+          <i data-lucide="${step[0]}"></i>
+
+        </div>
+
+        <div class="step-content">
+
+          <strong>
+            ${escapeHTML(step[1])}
+          </strong>
+
+          <span>
+            ${escapeHTML(step[2])}
+          </span>
+
+        </div>
+
+      `;
+
+
+      container.appendChild(
+        div
+      );
+
+    }
+  );
+
+
+  lucide.createIcons();
+
+
+
+  /* =====================================================
+     GOOGLE MAPS
+  ===================================================== */
+
+  createGoogleMapsLink(
+    destination
+  );
+
+
+
+  /* =====================================================
+     SHOW RESULT
+  ===================================================== */
+
+  document.getElementById(
+    "routeResult"
+  ).style.display =
+    "block";
+
+
+  showMessage(
+    "Accessible route prepared for " +
+    destination +
+    ".",
+    false
+  );
+
+
+
+  /* =====================================================
+     VOICE
+  ===================================================== */
+
+  speak(
+    "Accessible route to " +
+    destination +
+    " is ready. " +
+    "The recommended route is designed to avoid stairs " +
+    "and prioritize accessible pathways."
+  );
+
+
+
+  /* =====================================================
+     SCROLL
+  ===================================================== */
+
+  document.getElementById(
+    "routeResult"
+  ).scrollIntoView({
+
+    behavior: "smooth",
+
+    block: "start"
+
+  });
+
+}
+
+
+
+/* =========================================================
+   GOOGLE MAPS LINK
+========================================================= */
+
+function createGoogleMapsLink(
+  destination
+) {
+
+  const params =
+    new URLSearchParams();
+
+
+  params.set(
+    "api",
+    "1"
+  );
+
+
+  /* GPS origin */
+
+  if (
+    userLat !== null &&
+    userLng !== null
+  ) {
+
+    params.set(
+      "origin",
+      userLat +
+      "," +
+      userLng
+    );
+
+  } else {
+
+    params.set(
+      "origin",
+      CAMPUS_ADDRESS
+    );
+
+  }
+
+
+  /* Destination */
+
+  params.set(
+    "destination",
+    destination +
+    ", " +
+    CAMPUS_ADDRESS
+  );
+
+
+  params.set(
+    "travelmode",
+    "walking"
+  );
+
+
+  params.set(
+    "dir_action",
+    "navigate"
+  );
+
+
+  const url =
+    "https://www.google.com/maps/dir/?" +
+    params.toString();
+
+
+  document.getElementById(
+    "googleNavigation"
+  ).href =
+    url;
+
+}
+
+
+
+/* =========================================================
+   VOICE ROUTE
+========================================================= */
+
+function speakRoute() {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    alert(
+      "Text-to-speech is not supported by this browser."
+    );
+
+    return;
+  }
+
+
+  if (!currentDestination) {
+
+    showMessage(
+      "Find an accessible route first.",
+      true
+    );
+
+    return;
+  }
+
+
+  const route =
+    accessibleRoutes[
+      currentDestination
+    ];
+
+
+  if (!route) {
+    return;
+  }
+
+
+  let text =
+    "Accessible route to " +
+    currentDestination +
+    ". ";
+
+
+  route.steps.forEach(
+    function(step, index) {
+
+      text +=
+
+        "Step " +
+        (index + 1) +
+        ". " +
+
+        step[1] +
+        ". " +
+
+        step[2] +
+        ". ";
+
+    }
+  );
+
+
+  text +=
+    "Please proceed carefully and follow the accessible pathway.";
+
+
+  window.speechSynthesis.cancel();
+
+
+  const utterance =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+
+  utterance.lang =
+    document.getElementById(
+      "languagePicker"
+    ).value;
+
+
+  utterance.rate =
+    0.88;
+
+
+  utterance.pitch =
+    1;
+
+
+  window.speechSynthesis.speak(
+    utterance
+  );
+
+}
+
+
+
+/* =========================================================
+   GENERAL SPEECH
+========================================================= */
+
+function speak(text) {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+    return;
+  }
+
+
+  window.speechSynthesis.cancel();
+
+
+  const utterance =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+
+  utterance.lang =
+    document.getElementById(
+      "languagePicker"
+    ).value;
+
+
+  utterance.rate =
+    0.88;
+
+
+  utterance.pitch =
+    1;
+
+
+  window.speechSynthesis.speak(
+    utterance
+  );
+
+}
+
+
+
+/* =========================================================
+   ACCESSIBILITY OPTION TOGGLE
+========================================================= */
+
+function toggleOption(
+  element
+) {
+
+  element.classList.toggle(
+    "active"
+  );
+
+
+  const optionName =
+    element.innerText.trim();
+
+
+  const state =
+    element.classList.contains(
+      "active"
+    );
+
+
+  showMessage(
+
+    optionName +
+    ": " +
+    (
+      state
+        ? "enabled"
+        : "disabled"
+    ),
+
+    false
+
+  );
+
+}
+
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showMessage(
+  text,
+  error
+) {
+
+  const element =
+    document.getElementById(
+      "message"
+    );
+
+
+  element.innerText =
+    text;
+
+
+  element.className =
+    "message show " +
+    (
+      error
+        ? "error"
+        : "success"
+    );
+
+
+  clearTimeout(
+    window.messageTimer
+  );
+
+
+  window.messageTimer =
+    setTimeout(
+      function() {
+
+        element.classList.remove(
+          "show"
+        );
+
+      },
+      5000
+    );
+
+}
+
+
+
+/* =========================================================
+   SOS
+========================================================= */
+
+function triggerSOS() {
+
+  let locationText =
+    "GPS location unavailable.";
+
+
+  if (
+    userLat !== null &&
+    userLng !== null
+  ) {
+
+    locationText =
+
+      "Current GPS location is " +
+
+      userLat.toFixed(6) +
+
+      ", " +
+
+      userLng.toFixed(6);
+
+  }
+
+
+  const message =
+
+    "Emergency SOS activated. " +
+    locationText;
+
+
+  fetch("/api/sos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      lat: userLat,
+      lng: userLng,
+      page: "wheelchair",
+      message: message
+    })
+  }).catch(function(error) {
+    console.log("SOS log failed:", error);
+  });
+
+
+  speak(
+    "Emergency SOS activated."
+  );
+
+
+  if (
+    navigator.vibrate
+  ) {
+
+    navigator.vibrate(
+      [300, 150, 300]
+    );
+
+  }
+
+
+  alert(
+    message
+  );
+
+}
+
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function goTo(
+  page
+) {
+
+  window.location.href =
+    page;
+
+}
+
+
+
+/* =========================================================
+   COMING SOON
+========================================================= */
+
+function showComingSoon(
+  feature
+) {
+
+  showMessage(
+
+    feature +
+    " module is being prepared.",
+
+    false
+
+  );
+
+}
+
+
+
+/* =========================================================
+   SAFE HTML
+========================================================= */
+
+function escapeHTML(
+  text
+) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.textContent =
+    text;
+
+
+  return div.innerHTML;
+
+}
+
+
+
+/* =========================================================
+   LANGUAGE SUPPORT
+========================================================= */
+
+const languageTranslations = {
+  "en-IN": {
+    gpsStatus: "GPS Locating...",
+    voiceAssistant: "AI Voice Assistant",
+    visualAi: "Visual AI Guidance",
+    wheelchair: "Wheelchair Access Routes",
+    shuttle: "Campus Shuttle Live",
+    sos: "EMERGENCY SOS",
+    pageTitle: "Wheelchair Access Routes",
+    pageSubtitle: "Find step-free and wheelchair-friendly routes across the Sathyabama University campus.",
+    startLabel: "STARTING POINT",
+    destinationLabel: "DESTINATION",
+    optionRamps: "Prefer ramps",
+    optionSmooth: "Smooth surfaces",
+    optionShort: "Shortest accessible route",
+    languageChanged: "Language changed to"
+  },
+  "ta-IN": {
+    gpsStatus: "ஜி.பி.எஸ் கண்டுபிடிக்கிறது...",
+    voiceAssistant: "AI குரல் உதவியாளர்",
+    visualAi: "விஷுவல் AI வழிகாட்டல்",
+    wheelchair: "சக்கர நாற்காலி அணுகல் வழிகள்",
+    shuttle: "கேம்பஸ் ஷட்டில் நேரடி",
+    sos: "அவசர SOS",
+    pageTitle: "சக்கர நாற்காலி அணுகல் வழிகள்",
+    pageSubtitle: "சத்தியபாமா பல்கலைக்கழக வளாகத்தில் படிக்கட்டுகள் இல்லாத மற்றும் சக்கர நாற்காலிக்கு ஏற்ற பாதைகளை கண்டறியவும்.",
+    startLabel: "தொடக்கப் புள்ளி",
+    destinationLabel: "சேருமிடம்",
+    optionRamps: "ரேம்புகளை விரும்புங்கள்",
+    optionSmooth: "மிருதுவான சாலைகள்",
+    optionShort: "சுருக்கமான அணுகக்கூடிய பாதை",
+    languageChanged: "மொழி மாற்றப்பட்டது:"
+  },
+  "hi-IN": {
+    gpsStatus: "जीपीएस定位 हो रहा है...",
+    voiceAssistant: "एआई वॉइस असिस्टेंट",
+    visualAi: "विज़ुअल AI मार्गदर्शन",
+    wheelchair: "व्हीलचेयर एक्सेस रूट्स",
+    shuttle: "कैम्पस शटल लाइव",
+    sos: "आपातकालीन SOS",
+    pageTitle: "व्हीलचेयर एक्सेस रूट्स",
+    pageSubtitle: "सैथ्याम्बामा विश्वविद्यालय परिसर में स्टेप-फ्री और व्हीलचेयर-फ्रेंडली रास्ते खोजें।",
+    startLabel: "प्रारंभ बिंदु",
+    destinationLabel: "गंतव्य",
+    optionRamps: "राम्प पसंद करें",
+    optionSmooth: "स्मूथ सतहें",
+    optionShort: "सबसे छोटा एक्सेसिबल रूट",
+    languageChanged: "भाषा बदली:"
+  },
+  "te-IN": {
+    gpsStatus: "GPS కనెక్ట్ అవుతుంది...",
+    voiceAssistant: "AI వాయిస్ అసిస్టెంట్",
+    visualAi: "విజువల్ AI మార్గదర్శన",
+    wheelchair: "వీల్చైర్ యాక్సెస్ మార్గాలు",
+    shuttle: "క్యాంపస్ షటిల్ లైవ్",
+    sos: "అత్యవసర SOS",
+    pageTitle: "వీల్చైర్ యాక్సెస్ మార్గాలు",
+    pageSubtitle: "సత్యబామా విశ్వవిద్యాలయ క్యాంపస్‌లో స్టెప్-ఫ్రీ మరియు వీల్‌చైర్-స్నేహపూర్వక మార్గాలను కనుగొనండి.",
+    startLabel: "ప్రారంభ స్థానం",
+    destinationLabel: "గమ్యం",
+    optionRamps: "రంప్లు ఇష్టపడండి",
+    optionSmooth: "సమతల ఉపరితలాలు",
+    optionShort: "చిన్న అంగీకరించదగిన మార్గం",
+    languageChanged: "భాష మార్చబడింది:"
+  },
+  "kn-IN": {
+    gpsStatus: "GPS ಹುಡುಕಲಾಗುತ್ತಿದೆ...",
+    voiceAssistant: "AI ಧ್ವನಿ ಸಹಾಯಕ",
+    visualAi: "ವಿಷುವಲ್ AI ಮಾರ್ಗದರ್ಶನ",
+    wheelchair: "ವೀಲ್‌ಚೇರ್ ಪ್ರವೇಶ ಮಾರ್ಗಗಳು",
+    shuttle: "ಕ್ಯಾಂಪಸ್ ಶಟ್ಲ್ ಲೈವ್",
+    sos: "ತುರ್ತು SOS",
+    pageTitle: "ವೀಲ್‌ಚೇರ್ ಪ್ರವೇಶ ಮಾರ್ಗಗಳು",
+    pageSubtitle: "ಸತ್ಯಬಾಮ ವಿಶ್ವವಿದ್ಯಾಲಯದ ಕ್ಯಾಂಪಸ್‌ನಲ್ಲಿ ಸ್ಟೆಪ್-ಫ್ರೀ ಮತ್ತು ವೀಲ್‌ಚೇರ್-ಫ್ರೆಂಡ್ಲಿ ಮಾರ್ಗಗಳನ್ನು ಹುಡುಕಿ.",
+    startLabel: "ಹುಡುಕಾಟ ಎಬಿ",
+    destinationLabel: "ಗುರಿ",
+    optionRamps: "ರಾಂಪ್ಗಳನ್ನು ಆದ್ಯತೆಯ follow",
+    optionSmooth: "ಸಮತಟ್ಟಾದ ಮೇಲ್ಮೈಗಳು",
+    optionShort: "ಚಿಕ್ಕ ಪ್ರವೇಶಿಸಬಹುದಾದ ಮಾರ್ಗ",
+    languageChanged: "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗಿದೆ:"
+  },
+  "ml-IN": {
+    gpsStatus: "GPS കണ്ടെത്തുന്നു...",
+    voiceAssistant: "AI വോയ്‌സ് അസിസ്റ്റന്റ്",
+    visualAi: "വിഷ്വൽ AI മാർഗ്ഗനിർദ്ദേശം",
+    wheelchair: "വിഐൽചെയർ ആക്സസ് റൂട്ടുകൾ",
+    shuttle: "കാമ്പസ് ഷട്ടിൽ ലൈവ്",
+    sos: "അടിയന്തര SOS",
+    pageTitle: "വിഐൽചെയർ ആക്സസ് റൂട്ടുകൾ",
+    pageSubtitle: "സത്യബാമാ സർവ്വകലാശാലാ ക്യാമ്പസിൽ സ്റ്റെപ്പ്-ഫ്രീ, വിഐൽചെയർ-ഫ്രെൻഡ്ലി റൂട്ടുകൾ കണ്ടെത്തുക.",
+    startLabel: "തുടക്കം",
+    destinationLabel: "ലക്ഷ്യം",
+    optionRamps: "റാംപുകൾ ബോർദ്ദിക്കുക",
+    optionSmooth: "സമതലമായ സ്ഥലങ്ങൾ",
+    optionShort: "ചെറുതായുള്ള ആക്സസ് റൂട്ട്",
+    languageChanged: "ഭാഷ മാറി:"
+  }
+};
+
+let currentLanguage = localStorage.getItem("accessPathLanguage") || "en-IN";
+
+function getLocalizedText(key) {
+  return (languageTranslations[currentLanguage] && languageTranslations[currentLanguage][key]) || languageTranslations["en-IN"][key] || key;
+}
+
+function applyLanguageUI() {
+  const selectedLanguage = languageTranslations[currentLanguage] ? currentLanguage : "en-IN";
+  currentLanguage = selectedLanguage;
+  const picker = document.getElementById("languagePicker");
+  if (picker) picker.value = selectedLanguage;
+  document.documentElement.lang = selectedLanguage;
+
+  const menuItems = document.querySelectorAll(".menu-item");
+  const menuText = [
+    getLocalizedText("voiceAssistant"),
+    getLocalizedText("visualAi"),
+    getLocalizedText("wheelchair"),
+    getLocalizedText("shuttle")
+  ];
+
+  menuItems.forEach((item, index) => {
+    if (index >= menuText.length) return;
+
+    const span = item.querySelector("span");
+    if (span) {
+      span.textContent = menuText[index];
+      return;
+    }
+
+    Array.from(item.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        node.textContent = menuText[index];
+      }
+    });
+  });
+
+  const sosButton = document.querySelector(".sos-btn");
+  if (sosButton) {
+    const textNode = Array.from(sosButton.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (textNode) textNode.textContent = getLocalizedText("sos");
+  }
+
+  const gpsStatus = document.getElementById("gpsStatus");
+  if (gpsStatus) gpsStatus.textContent = getLocalizedText("gpsStatus");
+
+  const pageTitle = document.querySelector(".heading-text h1");
+  if (pageTitle) pageTitle.textContent = getLocalizedText("pageTitle");
+
+  const pageSubtitle = document.querySelector(".heading-text p");
+  if (pageSubtitle) pageSubtitle.textContent = getLocalizedText("pageSubtitle");
+
+  const startLabel = document.querySelector("#startPoint")?.closest(".field")?.querySelector("label");
+  if (startLabel) startLabel.textContent = getLocalizedText("startLabel");
+
+  const destinationLabel = document.querySelector("#destination")?.closest(".field")?.querySelector("label");
+  if (destinationLabel) destinationLabel.textContent = getLocalizedText("destinationLabel");
+
+  localStorage.setItem("accessPathLanguage", currentLanguage);
+}
+
+document
+  .getElementById("languagePicker")
+  .addEventListener("change", function() {
+    currentLanguage = this.value;
+    applyLanguageUI();
+    showMessage(
+      getLocalizedText("languageChanged") + " " + this.options[this.selectedIndex]?.text + ".",
+      false
+    );
+  });
+
+const savedLanguage = localStorage.getItem("accessPathLanguage");
+if (savedLanguage && languageTranslations[savedLanguage]) currentLanguage = savedLanguage;
+applyLanguageUI();
+
+
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+window.addEventListener(
+  "load",
+  function() {
+
+    lucide.createIcons();
+
+    startGPS();
+
+    loadPassedDestination();
+
+  }
+);
+
+
+
+/* =========================================================
+   CLEANUP
+========================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  function() {
+
+    if (
+      gpsWatchId !== null
+    ) {
+
+      navigator.geolocation.clearWatch(
+        gpsWatchId
+      );
+
+    }
+
+
+    if (
+      "speechSynthesis" in window
+    ) {
+
+      window.speechSynthesis.cancel();
+
+    }
+
+  }
+);
+
+</script>
+
+
+</body>
+</html>

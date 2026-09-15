@@ -1,0 +1,4265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>AccessPathAI — Campus Shuttle Live</title>
+
+  <!-- GOOGLE FONTS -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- LUCIDE ICONS -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <style>
+
+    /* ==========================================================
+       ROOT
+    ========================================================== */
+
+    :root {
+
+      --bg:#fafafa;
+      --white:#ffffff;
+      --sidebar:#fcf9f9;
+
+      --text:#171717;
+      --muted:#6b6b6b;
+
+      --wine:#800020;
+      --wine-dark:#680019;
+      --wine-soft:#f6e9ed;
+
+      --green:#10b981;
+      --green-dark:#047857;
+      --green-soft:#ecfdf5;
+
+      --orange:#f59e0b;
+      --orange-dark:#b45309;
+      --orange-soft:#fffbeb;
+
+      --red:#dc2626;
+      --red-soft:#fef2f2;
+
+      --blue:#2563eb;
+      --blue-soft:#eff6ff;
+
+      --purple:#7c3aed;
+      --purple-soft:#f5f3ff;
+
+      --border:#e7e7e7;
+
+      --shadow:
+        0 8px 30px rgba(0,0,0,.05);
+
+      --font:
+        "Plus Jakarta Sans",
+        sans-serif;
+
+      --heading:
+        "Space Grotesk",
+        sans-serif;
+    }
+
+
+    /* ==========================================================
+       RESET
+    ========================================================== */
+
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+
+    html,
+    body {
+      width:100%;
+      min-height:100%;
+    }
+
+
+    body {
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+    }
+
+
+    button,
+    select,
+    input {
+      font-family:inherit;
+    }
+
+
+    button {
+      cursor:pointer;
+    }
+
+
+    /* ==========================================================
+       TOP NAVBAR
+    ========================================================== */
+
+    nav.top-navbar {
+
+      height:68px;
+
+      background:white;
+
+      border-bottom:
+        1px solid var(--border);
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+      padding:0 28px;
+
+      position:sticky;
+
+      top:0;
+
+      z-index:100;
+    }
+
+
+    .brand {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:10px;
+
+      font-family:var(--heading);
+
+      font-size:25px;
+
+      color:var(--wine);
+    }
+
+
+    .brand span {
+      color:#171717;
+    }
+
+
+    .brand svg {
+
+      width:25px;
+      height:25px;
+
+      stroke-width:2.5;
+    }
+
+
+    .nav-right {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:18px;
+    }
+
+
+    .gps-pill {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:8px;
+
+      padding:9px 15px;
+
+      border-radius:999px;
+
+      background:var(--green-soft);
+
+      color:var(--green-dark);
+
+      font-size:13px;
+
+      font-weight:700;
+    }
+
+
+    .gps-dot {
+
+      width:9px;
+      height:9px;
+
+      border-radius:50%;
+
+      background:var(--green);
+
+      box-shadow:
+        0 0 0 4px rgba(16,185,129,.12);
+
+      animation:
+        gpsPulse 1.7s infinite;
+    }
+
+
+    @keyframes gpsPulse {
+
+      0% {
+        box-shadow:
+          0 0 0 0 rgba(16,185,129,.3);
+      }
+
+      70% {
+        box-shadow:
+          0 0 0 7px rgba(16,185,129,0);
+      }
+
+      100% {
+        box-shadow:
+          0 0 0 0 rgba(16,185,129,0);
+      }
+
+    }
+
+
+    .gps-pill.error {
+
+      background:var(--red-soft);
+
+      color:var(--red);
+    }
+
+
+    .gps-pill.error .gps-dot {
+      background:var(--red);
+    }
+
+
+    .lang-select {
+
+      width:255px;
+
+      height:44px;
+
+      border:1px solid #ddd;
+
+      border-radius:10px;
+
+      background:white;
+
+      padding:0 14px;
+
+      font-size:14px;
+
+      font-weight:600;
+
+      outline:none;
+    }
+
+
+    .lang-select:focus {
+
+      border-color:var(--wine);
+
+      box-shadow:
+        0 0 0 3px rgba(128,0,32,.08);
+    }
+
+
+    /* ==========================================================
+       DASHBOARD
+    ========================================================== */
+
+    .dashboard {
+
+      min-height:
+        calc(100vh - 68px);
+
+      display:flex;
+    }
+
+
+    /* ==========================================================
+       SIDEBAR
+    ========================================================== */
+
+    aside {
+
+      width:320px;
+
+      flex-shrink:0;
+
+      background:var(--sidebar);
+
+      border-right:
+        1px solid var(--border);
+
+      padding:30px 24px 20px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      justify-content:space-between;
+    }
+
+
+    .sidebar-title {
+
+      font-size:13px;
+
+      font-weight:700;
+
+      text-transform:uppercase;
+
+      letter-spacing:.08em;
+
+      color:#656565;
+
+      margin-bottom:17px;
+    }
+
+
+    .menu {
+
+      display:flex;
+
+      flex-direction:column;
+
+      gap:5px;
+    }
+
+
+    .menu-item {
+
+      width:100%;
+
+      min-height:57px;
+
+      border:none;
+
+      border-radius:13px;
+
+      background:transparent;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:14px;
+
+      padding:0 18px;
+
+      color:#1d1d1d;
+
+      font-size:15px;
+
+      font-weight:600;
+
+      text-align:left;
+
+      transition:.2s ease;
+    }
+
+
+    .menu-item svg {
+
+      width:23px;
+      height:23px;
+
+      flex-shrink:0;
+    }
+
+
+    .menu-item:hover {
+
+      background:var(--wine-soft);
+
+      color:var(--wine);
+    }
+
+
+    .menu-item.active {
+
+      background:#f1e3e7;
+
+      color:var(--wine);
+    }
+
+
+    .sos-btn {
+
+      width:100%;
+
+      min-height:69px;
+
+      border:none;
+
+      border-radius:14px;
+
+      background:#e52424;
+
+      color:white;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      gap:10px;
+
+      font-size:15px;
+
+      font-weight:800;
+
+      box-shadow:
+        0 7px 18px rgba(220,38,38,.25);
+
+      transition:.2s ease;
+    }
+
+
+    .sos-btn:hover {
+
+      background:#b91c1c;
+
+      transform:translateY(-1px);
+    }
+
+
+    .sos-btn svg {
+
+      width:24px;
+      height:24px;
+    }
+
+
+    /* ==========================================================
+       MAIN
+    ========================================================== */
+
+    main {
+
+      flex:1;
+
+      min-width:0;
+
+      padding:30px;
+
+      background:var(--bg);
+    }
+
+
+    .main-inner {
+
+      max-width:1500px;
+
+      margin:auto;
+    }
+
+
+    /* ==========================================================
+       PAGE HEADER
+    ========================================================== */
+
+    .page-header {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:25px;
+
+      box-shadow:var(--shadow);
+
+      margin-bottom:18px;
+    }
+
+
+    .header-top {
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+      gap:20px;
+    }
+
+
+    .heading-left {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:15px;
+    }
+
+
+    .heading-icon {
+
+      width:58px;
+      height:58px;
+
+      border-radius:16px;
+
+      background:var(--wine-soft);
+
+      color:var(--wine);
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+    }
+
+
+    .heading-icon svg {
+
+      width:30px;
+      height:30px;
+    }
+
+
+    .heading-text h1 {
+
+      font-family:var(--heading);
+
+      font-size:27px;
+
+      margin-bottom:5px;
+    }
+
+
+    .heading-text p {
+
+      color:var(--muted);
+
+      font-size:13px;
+
+      line-height:1.6;
+    }
+
+
+    .live-badge {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:8px;
+
+      padding:10px 14px;
+
+      background:var(--green-soft);
+
+      color:var(--green-dark);
+
+      border-radius:999px;
+
+      font-size:12px;
+
+      font-weight:800;
+    }
+
+
+    .live-badge .live-dot {
+
+      width:8px;
+      height:8px;
+
+      border-radius:50%;
+
+      background:var(--green);
+
+      animation:
+        liveBlink 1.2s infinite;
+    }
+
+
+    @keyframes liveBlink {
+
+      0%,100% {
+        opacity:1;
+      }
+
+      50% {
+        opacity:.25;
+      }
+
+    }
+
+
+    /* ==========================================================
+       CONTROL CARD
+    ========================================================== */
+
+    .control-card {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:23px;
+
+      box-shadow:var(--shadow);
+
+      margin-bottom:18px;
+    }
+
+
+    .section-title {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:9px;
+
+      font-size:17px;
+
+      font-weight:800;
+
+      margin-bottom:18px;
+    }
+
+
+    .section-title svg {
+
+      color:var(--wine);
+
+      width:22px;
+      height:22px;
+    }
+
+
+    .planner-grid {
+
+      display:grid;
+
+      grid-template-columns:
+        1fr 1fr 180px;
+
+      gap:14px;
+    }
+
+
+    .field label {
+
+      display:block;
+
+      font-size:12px;
+
+      color:#666;
+
+      font-weight:700;
+
+      margin-bottom:7px;
+    }
+
+
+    .field select {
+
+      width:100%;
+
+      height:52px;
+
+      border:1px solid #ddd;
+
+      border-radius:11px;
+
+      padding:0 14px;
+
+      background:white;
+
+      font-size:14px;
+
+      font-weight:600;
+
+      outline:none;
+    }
+
+
+    .field select:focus {
+
+      border-color:var(--wine);
+
+      box-shadow:
+        0 0 0 3px rgba(128,0,32,.07);
+    }
+
+
+    .track-btn {
+
+      height:52px;
+
+      margin-top:19px;
+
+      border:none;
+
+      border-radius:11px;
+
+      background:var(--wine);
+
+      color:white;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      gap:8px;
+
+      font-size:13px;
+
+      font-weight:800;
+    }
+
+
+    .track-btn:hover {
+      background:var(--wine-dark);
+    }
+
+
+    .track-btn svg {
+
+      width:19px;
+      height:19px;
+    }
+
+
+    /* ==========================================================
+       LIVE SHUTTLE STATUS
+    ========================================================== */
+
+    .live-grid {
+
+      display:grid;
+
+      grid-template-columns:
+        1.35fr .65fr;
+
+      gap:18px;
+
+      margin-bottom:18px;
+    }
+
+
+    .shuttle-card {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:22px;
+
+      box-shadow:var(--shadow);
+    }
+
+
+    .shuttle-top {
+
+      display:flex;
+
+      align-items:flex-start;
+
+      justify-content:space-between;
+
+      gap:15px;
+
+      margin-bottom:20px;
+    }
+
+
+    .bus-info {
+
+      display:flex;
+
+      gap:14px;
+
+      align-items:center;
+    }
+
+
+    .bus-icon {
+
+      width:55px;
+      height:55px;
+
+      border-radius:15px;
+
+      background:var(--blue-soft);
+
+      color:var(--blue);
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+    }
+
+
+    .bus-icon svg {
+
+      width:29px;
+      height:29px;
+    }
+
+
+    .bus-info h2 {
+
+      font-family:var(--heading);
+
+      font-size:20px;
+
+      margin-bottom:4px;
+    }
+
+
+    .bus-info p {
+
+      color:#777;
+
+      font-size:12px;
+    }
+
+
+    .status-chip {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:7px;
+
+      padding:8px 11px;
+
+      background:var(--green-soft);
+
+      color:var(--green-dark);
+
+      border-radius:999px;
+
+      font-size:11px;
+
+      font-weight:800;
+    }
+
+
+    .status-chip span {
+
+      width:7px;
+      height:7px;
+
+      border-radius:50%;
+
+      background:var(--green);
+    }
+
+
+    /* ==========================================================
+       BUS POSITION
+    ========================================================== */
+
+    .bus-position {
+
+      border:1px solid #eee;
+
+      background:#fafafa;
+
+      border-radius:14px;
+
+      padding:18px;
+
+      margin-bottom:15px;
+    }
+
+
+    .position-header {
+
+      display:flex;
+
+      justify-content:space-between;
+
+      align-items:center;
+
+      margin-bottom:13px;
+    }
+
+
+    .position-header strong {
+      font-size:13px;
+    }
+
+
+    .position-header span {
+
+      color:var(--green-dark);
+
+      font-size:11px;
+
+      font-weight:800;
+    }
+
+
+    .progress-track {
+
+      height:8px;
+
+      background:#e5e7eb;
+
+      border-radius:99px;
+
+      overflow:hidden;
+    }
+
+
+    .progress-fill {
+
+      width:56%;
+
+      height:100%;
+
+      background:var(--green);
+
+      border-radius:99px;
+
+      transition:
+        width 1s linear;
+    }
+
+
+    .stop-row {
+
+      display:flex;
+
+      justify-content:space-between;
+
+      margin-top:9px;
+
+      font-size:10px;
+
+      color:#777;
+    }
+
+
+    .stop-row strong {
+      color:var(--text);
+    }
+
+
+    /* ==========================================================
+       ETA
+    ========================================================== */
+
+    .eta-grid {
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap:10px;
+    }
+
+
+    .eta-stat {
+
+      border:1px solid #eee;
+
+      background:#fafafa;
+
+      border-radius:11px;
+
+      padding:14px;
+    }
+
+
+    .eta-label {
+
+      color:#777;
+
+      font-size:10px;
+
+      font-weight:700;
+
+      text-transform:uppercase;
+
+      margin-bottom:6px;
+    }
+
+
+    .eta-value {
+
+      font-size:17px;
+
+      font-weight:800;
+    }
+
+
+    .eta-value.green {
+      color:var(--green-dark);
+    }
+
+
+    /* ==========================================================
+       NEXT STOP
+    ========================================================== */
+
+    .next-stop {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:22px;
+
+      box-shadow:var(--shadow);
+
+      display:flex;
+
+      flex-direction:column;
+
+      justify-content:center;
+    }
+
+
+    .next-stop-label {
+
+      color:#777;
+
+      font-size:11px;
+
+      font-weight:800;
+
+      text-transform:uppercase;
+
+      letter-spacing:.06em;
+
+      margin-bottom:9px;
+    }
+
+
+    .next-stop h2 {
+
+      font-family:var(--heading);
+
+      font-size:24px;
+
+      margin-bottom:7px;
+    }
+
+
+    .next-stop p {
+
+      color:#777;
+
+      font-size:12px;
+
+      line-height:1.6;
+
+      margin-bottom:18px;
+    }
+
+
+    .eta-big {
+
+      background:var(--green-soft);
+
+      border-radius:14px;
+
+      padding:16px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+      margin-bottom:12px;
+    }
+
+
+    .eta-big strong {
+
+      font-size:13px;
+
+      color:var(--green-dark);
+    }
+
+
+    .eta-big span {
+
+      font-family:var(--heading);
+
+      font-size:25px;
+
+      color:var(--green-dark);
+    }
+
+
+    .notify-btn {
+
+      width:100%;
+
+      height:48px;
+
+      border:1px solid #ddd;
+
+      background:white;
+
+      color:var(--wine);
+
+      border-radius:10px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      gap:8px;
+
+      font-size:12px;
+
+      font-weight:800;
+    }
+
+
+    .notify-btn:hover {
+      background:var(--wine-soft);
+    }
+
+
+    /* ==========================================================
+       MAP
+    ========================================================== */
+
+    .map-card {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:22px;
+
+      box-shadow:var(--shadow);
+
+      margin-bottom:18px;
+    }
+
+
+    .map-header {
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+      gap:10px;
+
+      margin-bottom:18px;
+    }
+
+
+    .map-header .section-title {
+      margin-bottom:0;
+    }
+
+
+    .map-status {
+
+      font-size:11px;
+
+      color:#777;
+
+      font-weight:700;
+    }
+
+
+    .campus-map {
+
+      min-height:320px;
+
+      border-radius:15px;
+
+      border:1px solid #e5e7eb;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f8fafc,
+          #f1f5f9
+        );
+
+      position:relative;
+
+      overflow:hidden;
+    }
+
+
+    .map-road {
+
+      position:absolute;
+
+      height:8px;
+
+      background:#d6d3d1;
+
+      border-radius:99px;
+
+      transform-origin:left center;
+    }
+
+
+    .road-1 {
+
+      width:78%;
+
+      left:10%;
+
+      top:46%;
+
+      transform:rotate(-9deg);
+    }
+
+
+    .road-2 {
+
+      width:60%;
+
+      left:25%;
+
+      top:65%;
+
+      transform:rotate(15deg);
+    }
+
+
+    .road-3 {
+
+      width:50%;
+
+      left:4%;
+
+      top:28%;
+
+      transform:rotate(25deg);
+    }
+
+
+    .map-building {
+
+      position:absolute;
+
+      background:white;
+
+      border:1px solid #d6d3d1;
+
+      border-radius:8px;
+
+      padding:7px 10px;
+
+      font-size:10px;
+
+      font-weight:800;
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,.05);
+    }
+
+
+    .building-1 {
+      left:8%;
+      top:12%;
+    }
+
+
+    .building-2 {
+      left:42%;
+      top:14%;
+    }
+
+
+    .building-3 {
+      right:8%;
+      top:34%;
+    }
+
+
+    .building-4 {
+      left:17%;
+      bottom:12%;
+    }
+
+
+    .building-5 {
+      right:20%;
+      bottom:12%;
+    }
+
+
+    .map-stop {
+
+      position:absolute;
+
+      width:14px;
+      height:14px;
+
+      border-radius:50%;
+
+      background:white;
+
+      border:4px solid var(--wine);
+
+      z-index:5;
+
+      box-shadow:
+        0 2px 7px rgba(0,0,0,.15);
+    }
+
+
+    .stop-1 {
+      left:12%;
+      top:44%;
+    }
+
+
+    .stop-2 {
+      left:31%;
+      top:40%;
+    }
+
+
+    .stop-3 {
+      left:51%;
+      top:48%;
+    }
+
+
+    .stop-4 {
+      left:71%;
+      top:43%;
+    }
+
+
+    .stop-5 {
+      left:86%;
+      top:55%;
+    }
+
+
+    .bus-marker {
+
+      position:absolute;
+
+      left:57%;
+
+      top:43%;
+
+      width:42px;
+
+      height:42px;
+
+      border-radius:50%;
+
+      background:var(--wine);
+
+      color:white;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      z-index:10;
+
+      box-shadow:
+        0 7px 20px rgba(128,0,32,.28);
+
+      transition:
+        left 2s ease,
+        top 2s ease;
+    }
+
+
+    .bus-marker svg {
+
+      width:21px;
+      height:21px;
+    }
+
+
+    .bus-marker::before {
+
+      content:"";
+
+      position:absolute;
+
+      width:58px;
+
+      height:58px;
+
+      border-radius:50%;
+
+      border:2px solid rgba(128,0,32,.2);
+
+      animation:
+        busPulse 1.8s infinite;
+    }
+
+
+    @keyframes busPulse {
+
+      0% {
+        transform:scale(.8);
+        opacity:.8;
+      }
+
+      70% {
+        transform:scale(1.25);
+        opacity:0;
+      }
+
+      100% {
+        transform:scale(.8);
+        opacity:0;
+      }
+
+    }
+
+
+    .user-marker {
+
+      position:absolute;
+
+      left:18%;
+
+      top:55%;
+
+      width:17px;
+
+      height:17px;
+
+      border-radius:50%;
+
+      background:var(--blue);
+
+      border:3px solid white;
+
+      box-shadow:
+        0 3px 10px rgba(37,99,235,.3);
+
+      z-index:8;
+    }
+
+
+    .map-legend {
+
+      display:flex;
+
+      flex-wrap:wrap;
+
+      gap:16px;
+
+      margin-top:13px;
+
+      font-size:10px;
+
+      color:#777;
+
+      font-weight:700;
+    }
+
+
+    .legend-item {
+
+      display:flex;
+
+      align-items:center;
+
+      gap:6px;
+    }
+
+
+    .legend-dot {
+
+      width:10px;
+
+      height:10px;
+
+      border-radius:50%;
+    }
+
+
+    /* ==========================================================
+       STOPS
+    ========================================================== */
+
+    .stops-card {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:22px;
+
+      box-shadow:var(--shadow);
+
+      margin-bottom:18px;
+    }
+
+
+    .stops {
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(5,1fr);
+
+      gap:10px;
+    }
+
+
+    .stop-card {
+
+      border:1px solid #eee;
+
+      border-radius:12px;
+
+      padding:15px;
+
+      background:#fafafa;
+
+      position:relative;
+    }
+
+
+    .stop-card.active {
+
+      border-color:#a7f3d0;
+
+      background:var(--green-soft);
+    }
+
+
+    .stop-number {
+
+      width:27px;
+
+      height:27px;
+
+      border-radius:50%;
+
+      background:var(--wine-soft);
+
+      color:var(--wine);
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      font-size:11px;
+
+      font-weight:800;
+
+      margin-bottom:10px;
+    }
+
+
+    .stop-card.active .stop-number {
+
+      background:var(--green);
+
+      color:white;
+    }
+
+
+    .stop-card strong {
+
+      display:block;
+
+      font-size:12px;
+
+      margin-bottom:5px;
+    }
+
+
+    .stop-card span {
+
+      color:#777;
+
+      font-size:10px;
+
+      line-height:1.5;
+    }
+
+
+    .stop-eta {
+
+      display:inline-block;
+
+      margin-top:9px;
+
+      padding:5px 7px;
+
+      border-radius:7px;
+
+      background:white;
+
+      color:var(--green-dark);
+
+      font-size:9px;
+
+      font-weight:800;
+    }
+
+
+    /* ==========================================================
+       FEATURES
+    ========================================================== */
+
+    .features-card {
+
+      background:white;
+
+      border:1px solid var(--border);
+
+      border-radius:18px;
+
+      padding:22px;
+
+      box-shadow:var(--shadow);
+    }
+
+
+    .features {
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap:12px;
+    }
+
+
+    .feature {
+
+      border:1px solid #eee;
+
+      border-radius:12px;
+
+      padding:15px;
+
+      background:#fafafa;
+    }
+
+
+    .feature-icon {
+
+      width:38px;
+
+      height:38px;
+
+      border-radius:10px;
+
+      background:var(--blue-soft);
+
+      color:var(--blue);
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      margin-bottom:10px;
+    }
+
+
+    .feature-icon svg {
+
+      width:19px;
+      height:19px;
+    }
+
+
+    .feature strong {
+
+      display:block;
+
+      font-size:12px;
+
+      margin-bottom:4px;
+    }
+
+
+    .feature span {
+
+      color:#777;
+
+      font-size:11px;
+
+      line-height:1.5;
+    }
+
+
+    /* ==========================================================
+       MESSAGE
+    ========================================================== */
+
+    .message {
+
+      display:none;
+
+      margin-top:15px;
+
+      padding:12px 15px;
+
+      border-radius:10px;
+
+      font-size:12px;
+
+      font-weight:700;
+    }
+
+
+    .message.show {
+      display:block;
+    }
+
+
+    .message.success {
+
+      color:var(--green-dark);
+
+      background:var(--green-soft);
+
+      border:1px solid #c9f4e3;
+    }
+
+
+    .message.error {
+
+      color:#b91c1c;
+
+      background:var(--red-soft);
+
+      border:1px solid #fecaca;
+    }
+
+
+    /* ==========================================================
+       MOBILE BOTTOM NAVIGATION
+    ========================================================== */
+
+    .mobile-bottom-nav {
+      display:none;
+    }
+
+
+    @media(max-width:850px) {
+
+      body {
+        padding-bottom:78px;
+      }
+
+
+      .mobile-bottom-nav {
+
+        position:fixed !important;
+
+        top:auto !important;
+
+        left:0;
+
+        right:0;
+
+        bottom:0;
+
+        width:100%;
+
+        height:74px;
+
+        display:flex;
+
+        align-items:center;
+
+        justify-content:space-around;
+
+        background:rgba(255,255,255,.98);
+
+        border-top:
+          1px solid var(--border);
+
+        border-bottom:none;
+
+        box-shadow:
+          0 -6px 25px rgba(0,0,0,.10);
+
+        padding:5px 6px;
+
+        padding-bottom:
+          calc(
+            5px +
+            env(safe-area-inset-bottom)
+          );
+
+        z-index:99999;
+      }
+
+
+      .mobile-nav-item {
+
+        flex:1;
+
+        min-width:0;
+
+        height:62px;
+
+        border:none;
+
+        border-radius:12px;
+
+        background:transparent;
+
+        display:flex;
+
+        flex-direction:column;
+
+        align-items:center;
+
+        justify-content:center;
+
+        gap:4px;
+
+        color:#555;
+
+        font-family:var(--font);
+
+        font-size:8px;
+
+        font-weight:800;
+
+        cursor:pointer;
+
+        transition:
+          background .2s ease,
+          color .2s ease,
+          transform .15s ease;
+
+        -webkit-tap-highlight-color:
+          transparent;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width:21px;
+
+        height:21px;
+
+        stroke-width:2.4;
+      }
+
+
+      .mobile-nav-item:hover {
+
+        background:var(--wine-soft);
+
+        color:var(--wine);
+      }
+
+
+      .mobile-nav-item:active {
+
+        transform:scale(.93);
+      }
+
+
+      .mobile-nav-item.active {
+
+        background:var(--wine-soft);
+
+        color:var(--wine);
+      }
+
+
+      .mobile-nav-item.sos-item {
+
+        color:var(--red);
+      }
+
+
+      .mobile-nav-item.sos-item:hover {
+
+        background:var(--red-soft);
+
+        color:#b91c1c;
+      }
+
+    }
+
+
+    /* ==========================================================
+       RESPONSIVE
+    ========================================================== */
+
+    @media(max-width:1100px) {
+
+      aside {
+        width:250px;
+      }
+
+
+      .planner-grid {
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+
+      .track-btn {
+
+        width:100%;
+
+        margin-top:0;
+      }
+
+
+      .stops {
+
+        grid-template-columns:
+          repeat(3,1fr);
+      }
+
+
+      .features {
+
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+    }
+
+
+    @media(max-width:850px) {
+
+      aside {
+        display:none;
+      }
+
+
+      main {
+        padding:15px;
+      }
+
+
+      .live-grid {
+
+        grid-template-columns:1fr;
+      }
+
+
+      .planner-grid {
+
+        grid-template-columns:1fr;
+      }
+
+
+      .stops {
+
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+
+      .header-top {
+
+        align-items:flex-start;
+      }
+
+
+      .live-badge {
+        display:none;
+      }
+
+    }
+
+
+    @media(max-width:600px) {
+
+      nav.top-navbar {
+
+        padding:0 15px;
+      }
+
+
+      .brand {
+        font-size:20px;
+      }
+
+
+      .gps-pill {
+        display:none;
+      }
+
+
+      .lang-select {
+
+        width:150px;
+
+        font-size:12px;
+      }
+
+
+      .heading-text h1 {
+
+        font-size:22px;
+      }
+
+
+      .heading-text p {
+
+        font-size:12px;
+      }
+
+
+      .eta-grid {
+
+        grid-template-columns:1fr;
+      }
+
+
+      .stops {
+
+        grid-template-columns:1fr;
+      }
+
+
+      .features {
+
+        grid-template-columns:1fr;
+      }
+
+
+      .campus-map {
+
+        min-height:280px;
+      }
+
+
+      .mobile-bottom-nav {
+
+        height:68px;
+      }
+
+
+      .mobile-nav-item {
+
+        height:57px;
+
+        font-size:7px;
+
+        gap:3px;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width:20px;
+
+        height:20px;
+      }
+
+    }
+
+
+    @media(max-width:360px) {
+
+      .mobile-nav-item {
+
+        font-size:6.5px;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width:18px;
+
+        height:18px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- ==========================================================
+       TOP NAVBAR
+  ========================================================== -->
+
+  <nav class="top-navbar">
+
+    <div class="brand">
+
+      <i data-lucide="compass"></i>
+
+      AccessPath<span>AI</span>
+
+    </div>
+
+
+    <div class="nav-right">
+
+      <div
+        class="gps-pill"
+        id="gpsPill"
+      >
+
+        <span class="gps-dot"></span>
+
+        <span id="gpsStatus">
+          GPS Locating...
+        </span>
+
+      </div>
+
+
+      <select
+        class="lang-select"
+        id="languagePicker"
+      >
+
+        <option value="en-IN">
+          English (India)
+        </option>
+
+        <option value="ta-IN">
+          தமிழ் (Tamil)
+        </option>
+
+        <option value="hi-IN">
+          हिन्दी (Hindi)
+        </option>
+
+        <option value="te-IN">
+          తెలుగు (Telugu)
+        </option>
+
+        <option value="kn-IN">
+          ಕನ್ನಡ (Kannada)
+        </option>
+
+        <option value="ml-IN">
+          മലയാളം (Malayalam)
+        </option>
+
+      </select>
+
+    </div>
+
+  </nav>
+
+
+
+  <!-- ==========================================================
+       DASHBOARD
+  ========================================================== -->
+
+  <div class="dashboard">
+
+
+    <!-- ========================================================
+         SIDEBAR
+    ======================================================== -->
+
+    <aside>
+
+      <div>
+
+        <div class="sidebar-title">
+          Navigation Dashboard
+        </div>
+
+
+        <div class="menu">
+
+          <button
+            class="menu-item"
+            onclick="goTo('index.html')"
+          >
+
+            <i data-lucide="bot"></i>
+
+            AI Voice Assistant
+
+          </button>
+
+          <button
+            class="menu-item"
+            onclick="goTo('virtual.html')"
+          >
+
+            <i data-lucide="eye"></i>
+
+            Visual AI Guidance
+
+          </button>
+
+          <button
+            class="menu-item"
+            onclick="goTo('wheelchair.html')"
+          >
+
+            <i data-lucide="accessibility"></i>
+
+            Wheelchair Access Routes
+
+          </button>
+
+          <button
+            class="menu-item active"
+            aria-current="page"
+          >
+
+            <i data-lucide="bus"></i>
+
+            Campus Shuttle Live
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- SOS -->
+
+      <button
+        class="sos-btn"
+        onclick="triggerSOS()"
+      >
+
+        <i data-lucide="alert-triangle"></i>
+
+        EMERGENCY SOS
+
+      </button>
+
+    </aside>
+
+
+
+    <!-- ========================================================
+         MAIN
+    ======================================================== -->
+
+    <main>
+
+      <div class="main-inner">
+
+
+        <!-- ====================================================
+             PAGE HEADER
+        ==================================================== -->
+
+        <section class="page-header">
+
+          <div class="header-top">
+
+            <div class="heading-left">
+
+              <div class="heading-icon">
+
+                <i data-lucide="bus"></i>
+
+              </div>
+
+
+              <div class="heading-text">
+
+                <h1>
+                  Campus Shuttle Live
+                </h1>
+
+                <p>
+                  Track campus shuttle movement,
+                  stops and estimated arrival times.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div class="live-badge">
+
+              <span class="live-dot"></span>
+
+              LIVE SHUTTLE TRACKING
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             SHUTTLE PLANNER
+        ==================================================== -->
+
+        <section class="control-card">
+
+          <div class="section-title">
+
+            <i data-lucide="route"></i>
+
+            Shuttle Route Planner
+
+          </div>
+
+
+          <div class="planner-grid">
+
+
+            <!-- ROUTE -->
+
+            <div class="field">
+
+              <label>
+                SHUTTLE ROUTE
+              </label>
+
+              <select id="routeSelect">
+
+                <option value="Blue Route">
+                  Blue Route — Main Campus
+                </option>
+
+                <option value="Green Route">
+                  Green Route — Academic Blocks
+                </option>
+
+                <option value="Red Route">
+                  Red Route — Hostel Area
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- STOP -->
+
+            <div class="field">
+
+              <label>
+                YOUR STOP
+              </label>
+
+              <select id="stopSelect">
+
+                <option value="Main Gate">
+                  Main Gate
+                </option>
+
+                <option value="Central Library">
+                  Central Library
+                </option>
+
+                <option value="Academic Block">
+                  Academic Block
+                </option>
+
+                <option value="Canteen">
+                  Canteen
+                </option>
+
+                <option value="Hostel Area">
+                  Hostel Area
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- TRACK -->
+
+            <button
+              class="track-btn"
+              onclick="trackShuttle()"
+            >
+
+              <i data-lucide="locate-fixed"></i>
+
+              Track Shuttle
+
+            </button>
+
+          </div>
+
+
+          <div
+            id="message"
+            class="message"
+          ></div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             LIVE STATUS
+        ==================================================== -->
+
+        <section class="live-grid">
+
+
+          <!-- SHUTTLE CARD -->
+
+          <div class="shuttle-card">
+
+
+            <div class="shuttle-top">
+
+
+              <div class="bus-info">
+
+                <div class="bus-icon">
+
+                  <i data-lucide="bus-front"></i>
+
+                </div>
+
+
+                <div>
+
+                  <h2 id="busName">
+                    Shuttle A-01
+                  </h2>
+
+                  <p id="routeName">
+                    Blue Route • Main Campus
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="status-chip">
+
+                <span></span>
+
+                ON ROUTE
+
+              </div>
+
+            </div>
+
+
+
+            <!-- POSITION -->
+
+            <div class="bus-position">
+
+              <div class="position-header">
+
+                <strong>
+                  Current Shuttle Position
+                </strong>
+
+                <span id="movementText">
+                  Moving
+                </span>
+
+              </div>
+
+
+              <div class="progress-track">
+
+                <div
+                  class="progress-fill"
+                  id="progressFill"
+                ></div>
+
+              </div>
+
+
+              <div class="stop-row">
+
+                <span>
+                  Main Gate
+                </span>
+
+                <strong id="currentStop">
+                  Central Library
+                </strong>
+
+                <span>
+                  Hostel Area
+                </span>
+
+              </div>
+
+            </div>
+
+
+
+            <!-- STATS -->
+
+            <div class="eta-grid">
+
+
+              <div class="eta-stat">
+
+                <div class="eta-label">
+                  Next Stop
+                </div>
+
+                <div
+                  class="eta-value"
+                  id="nextStop"
+                >
+                  Academic Block
+                </div>
+
+              </div>
+
+
+              <div class="eta-stat">
+
+                <div class="eta-label">
+                  ETA
+                </div>
+
+                <div
+                  class="eta-value green"
+                  id="eta"
+                >
+                  4 min
+                </div>
+
+              </div>
+
+
+              <div class="eta-stat">
+
+                <div class="eta-label">
+                  Distance
+                </div>
+
+                <div
+                  class="eta-value"
+                  id="distance"
+                >
+                  0.8 km
+                </div>
+
+              </div>
+
+
+            </div>
+
+          </div>
+
+
+
+          <!-- NEXT STOP -->
+
+          <div class="next-stop">
+
+            <div class="next-stop-label">
+              Your Selected Stop
+            </div>
+
+
+            <h2 id="selectedStop">
+              Main Gate
+            </h2>
+
+
+            <p id="selectedDescription">
+              The shuttle will arrive at the selected
+              campus stop based on the simulated
+              live route.
+            </p>
+
+
+            <div class="eta-big">
+
+              <strong>
+                Estimated arrival
+              </strong>
+
+              <span id="bigEta">
+                7 min
+              </span>
+
+            </div>
+
+
+            <button
+              class="notify-btn"
+              onclick="speakArrival()"
+            >
+
+              <i data-lucide="volume-2"></i>
+
+              Announce Arrival
+
+            </button>
+
+          </div>
+
+
+        </section>
+
+
+
+        <!-- ====================================================
+             MAP
+        ==================================================== -->
+
+        <section class="map-card">
+
+
+          <div class="map-header">
+
+            <div class="section-title">
+
+              <i data-lucide="map"></i>
+
+              Live Shuttle Map
+
+            </div>
+
+
+            <div class="map-status">
+              Updated just now
+            </div>
+
+          </div>
+
+
+
+          <div class="campus-map">
+
+
+            <div class="map-road road-1"></div>
+
+            <div class="map-road road-2"></div>
+
+            <div class="map-road road-3"></div>
+
+
+
+            <!-- BUILDINGS -->
+
+            <div class="map-building building-1">
+              MAIN GATE
+            </div>
+
+
+            <div class="map-building building-2">
+              CENTRAL LIBRARY
+            </div>
+
+
+            <div class="map-building building-3">
+              ACADEMIC BLOCK
+            </div>
+
+
+            <div class="map-building building-4">
+              CANTEEN
+            </div>
+
+
+            <div class="map-building building-5">
+              HOSTEL AREA
+            </div>
+
+
+
+            <!-- STOPS -->
+
+            <div
+              class="map-stop stop-1"
+              title="Main Gate"
+            ></div>
+
+
+            <div
+              class="map-stop stop-2"
+              title="Central Library"
+            ></div>
+
+
+            <div
+              class="map-stop stop-3"
+              title="Academic Block"
+            ></div>
+
+
+            <div
+              class="map-stop stop-4"
+              title="Canteen"
+            ></div>
+
+
+            <div
+              class="map-stop stop-5"
+              title="Hostel Area"
+            ></div>
+
+
+
+            <!-- BUS -->
+
+            <div
+              class="bus-marker"
+              id="busMarker"
+              title="Live Shuttle"
+            >
+
+              <i data-lucide="bus-front"></i>
+
+            </div>
+
+
+
+            <!-- USER -->
+
+            <div
+              class="user-marker"
+              title="Your Location"
+            ></div>
+
+
+          </div>
+
+
+
+          <!-- LEGEND -->
+
+          <div class="map-legend">
+
+
+            <div class="legend-item">
+
+              <span
+                class="legend-dot"
+                style="background:#800020"
+              ></span>
+
+              Shuttle
+
+            </div>
+
+
+            <div class="legend-item">
+
+              <span
+                class="legend-dot"
+                style="background:#2563eb"
+              ></span>
+
+              Your Location
+
+            </div>
+
+
+            <div class="legend-item">
+
+              <span
+                class="legend-dot"
+                style="
+                  background:white;
+                  border:2px solid #800020
+                "
+              ></span>
+
+              Shuttle Stop
+
+            </div>
+
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             STOPS
+        ==================================================== -->
+
+        <section class="stops-card">
+
+          <div class="section-title">
+
+            <i data-lucide="map-pin"></i>
+
+            Shuttle Stops
+
+          </div>
+
+
+          <div class="stops">
+
+
+            <!-- STOP 1 -->
+
+            <div
+              class="stop-card active"
+              id="stopCard1"
+            >
+
+              <div class="stop-number">
+                1
+              </div>
+
+              <strong>
+                Main Gate
+              </strong>
+
+              <span>
+                Primary campus entry point
+              </span>
+
+              <span class="stop-eta">
+                Passed
+              </span>
+
+            </div>
+
+
+
+            <!-- STOP 2 -->
+
+            <div
+              class="stop-card"
+              id="stopCard2"
+            >
+
+              <div class="stop-number">
+                2
+              </div>
+
+              <strong>
+                Central Library
+              </strong>
+
+              <span>
+                Library shuttle stop
+              </span>
+
+              <span
+                class="stop-eta"
+                id="stopEta2"
+              >
+                4 min
+              </span>
+
+            </div>
+
+
+
+            <!-- STOP 3 -->
+
+            <div
+              class="stop-card"
+              id="stopCard3"
+            >
+
+              <div class="stop-number">
+                3
+              </div>
+
+              <strong>
+                Academic Block
+              </strong>
+
+              <span>
+                Academic buildings
+              </span>
+
+              <span
+                class="stop-eta"
+                id="stopEta3"
+              >
+                7 min
+              </span>
+
+            </div>
+
+
+
+            <!-- STOP 4 -->
+
+            <div
+              class="stop-card"
+              id="stopCard4"
+            >
+
+              <div class="stop-number">
+                4
+              </div>
+
+              <strong>
+                Canteen
+              </strong>
+
+              <span>
+                Food and student area
+              </span>
+
+              <span
+                class="stop-eta"
+                id="stopEta4"
+              >
+                10 min
+              </span>
+
+            </div>
+
+
+
+            <!-- STOP 5 -->
+
+            <div
+              class="stop-card"
+              id="stopCard5"
+            >
+
+              <div class="stop-number">
+                5
+              </div>
+
+              <strong>
+                Hostel Area
+              </strong>
+
+              <span>
+                Residential campus area
+              </span>
+
+              <span
+                class="stop-eta"
+                id="stopEta5"
+              >
+                14 min
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             FEATURES
+        ==================================================== -->
+
+        <section class="features-card">
+
+          <div class="section-title">
+
+            <i data-lucide="sparkles"></i>
+
+            Shuttle Accessibility Features
+
+          </div>
+
+
+          <div class="features">
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <i data-lucide="radio"></i>
+
+              </div>
+
+              <strong>
+                Live Status
+              </strong>
+
+              <span>
+                Displays the current shuttle
+                movement and route status.
+              </span>
+
+            </div>
+
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <i data-lucide="clock"></i>
+
+              </div>
+
+              <strong>
+                ETA Prediction
+              </strong>
+
+              <span>
+                Shows an estimated arrival time
+                for upcoming campus stops.
+              </span>
+
+            </div>
+
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <i data-lucide="volume-2"></i>
+
+              </div>
+
+              <strong>
+                Voice Announcements
+              </strong>
+
+              <span>
+                Users can hear shuttle arrival
+                information through voice guidance.
+              </span>
+
+            </div>
+
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <i data-lucide="accessibility"></i>
+
+              </div>
+
+              <strong>
+                Accessible Travel
+              </strong>
+
+              <span>
+                Designed to work together with
+                wheelchair route planning.
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </section>
+
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+
+  <!-- ==========================================================
+       MOBILE BOTTOM NAVIGATION
+  ========================================================== -->
+
+  <nav
+    class="mobile-bottom-nav"
+    aria-label="Mobile navigation"
+  >
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="AI Voice Assistant"
+      onclick="goTo('index.html')"
+    >
+
+      <i data-lucide="bot"></i>
+
+      <span>
+        Voice
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Visual AI Guidance"
+      onclick="goTo('virtual.html')"
+    >
+
+      <i data-lucide="eye"></i>
+
+      <span>
+        Visual
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Wheelchair Access Routes"
+      onclick="goTo('wheelchair.html')"
+    >
+
+      <i data-lucide="accessibility"></i>
+
+      <span>
+        Wheelchair
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item active"
+      type="button"
+      aria-label="Campus Shuttle Live"
+      aria-current="page"
+    >
+
+      <i data-lucide="bus"></i>
+
+      <span>
+        Shuttle
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item sos-item"
+      type="button"
+      aria-label="Emergency SOS"
+      onclick="triggerSOS()"
+    >
+
+      <i data-lucide="alert-triangle"></i>
+
+      <span>
+        SOS
+      </span>
+
+    </button>
+
+  </nav>
+
+
+
+  <!-- ==========================================================
+       JAVASCRIPT
+  ========================================================== -->
+
+  <script>
+
+    /* ==========================================================
+       ACCESSPATH AI
+       CAMPUS SHUTTLE MODULE
+    ========================================================== */
+
+
+    lucide.createIcons();
+
+
+
+    /* ==========================================================
+       APPLICATION STATE
+    ========================================================== */
+
+    let userLat = null;
+
+    let userLng = null;
+
+    let simulationPosition = 56;
+
+    let simulationTimer = null;
+
+    let selectedStop = "Main Gate";
+
+
+
+    /* ==========================================================
+       GPS
+    ========================================================== */
+
+    function startGPS() {
+
+      if (!navigator.geolocation) {
+
+        setGPSStatus(
+          "GPS unavailable",
+          true
+        );
+
+        return;
+      }
+
+
+      navigator.geolocation.watchPosition(
+
+        function(position) {
+
+          userLat =
+            position.coords.latitude;
+
+          userLng =
+            position.coords.longitude;
+
+
+          setGPSStatus(
+            "GPS Live",
+            false
+          );
+
+        },
+
+
+        function(error) {
+
+          console.error(
+            "GPS Error:",
+            error
+          );
+
+
+          setGPSStatus(
+            "GPS unavailable",
+            true
+          );
+
+        },
+
+
+        {
+          enableHighAccuracy:true,
+
+          maximumAge:3000,
+
+          timeout:15000
+        }
+
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       GPS STATUS
+    ========================================================== */
+
+    function setGPSStatus(
+      text,
+      error
+    ) {
+
+      const status =
+        document.getElementById(
+          "gpsStatus"
+        );
+
+
+      const pill =
+        document.getElementById(
+          "gpsPill"
+        );
+
+
+      status.innerText =
+        text;
+
+
+      if(error) {
+
+        pill.classList.add(
+          "error"
+        );
+
+      }
+
+      else {
+
+        pill.classList.remove(
+          "error"
+        );
+
+      }
+
+    }
+
+
+
+    /* ==========================================================
+       TRACK SHUTTLE
+    ========================================================== */
+
+    function trackShuttle() {
+
+      const route =
+        document.getElementById(
+          "routeSelect"
+        ).value;
+
+
+      selectedStop =
+        document.getElementById(
+          "stopSelect"
+        ).value;
+
+
+      document.getElementById(
+        "routeName"
+      ).innerText =
+        route +
+        " • Main Campus";
+
+
+      document.getElementById(
+        "selectedStop"
+      ).innerText =
+        selectedStop;
+
+
+      updateSelectedStopDescription();
+
+
+      showMessage(
+
+        "Live shuttle tracking started for " +
+        selectedStop +
+        ".",
+
+        false
+
+      );
+
+
+      speak(
+
+        "Campus shuttle tracking started. " +
+        "Your selected stop is " +
+        selectedStop +
+        "."
+
+      );
+
+
+      startSimulation();
+
+    }
+
+
+
+    /* ==========================================================
+       UPDATE DESCRIPTION
+    ========================================================== */
+
+    function updateSelectedStopDescription() {
+
+      const descriptions = {
+
+        "Main Gate":
+          "Primary campus entry and exit point.",
+
+        "Central Library":
+          "Shuttle stop serving the Central Library area.",
+
+        "Academic Block":
+          "Convenient stop for nearby academic buildings.",
+
+        "Canteen":
+          "Shuttle stop serving the student food area.",
+
+        "Hostel Area":
+          "Shuttle stop serving the residential campus area."
+
+      };
+
+
+      document.getElementById(
+        "selectedDescription"
+      ).innerText =
+
+        descriptions[selectedStop] ||
+
+        "Campus shuttle stop.";
+
+    }
+
+
+
+    /* ==========================================================
+       LIVE SIMULATION
+    ========================================================== */
+
+    function startSimulation() {
+
+      if(simulationTimer) {
+
+        clearInterval(
+          simulationTimer
+        );
+
+      }
+
+
+      simulationTimer =
+
+        setInterval(
+
+          function() {
+
+            simulationPosition += 2;
+
+
+            if(
+              simulationPosition > 96
+            ) {
+
+              simulationPosition = 8;
+
+            }
+
+
+            updateShuttlePosition();
+
+          },
+
+          3000
+
+        );
+
+
+      updateShuttlePosition();
+
+    }
+
+
+
+    /* ==========================================================
+       UPDATE SHUTTLE POSITION
+    ========================================================== */
+
+    function updateShuttlePosition() {
+
+      const progress =
+        simulationPosition;
+
+
+      document.getElementById(
+        "progressFill"
+      ).style.width =
+        progress + "%";
+
+
+      let currentStop;
+
+      let nextStop;
+
+      let eta;
+
+      let distance;
+
+
+
+      if(progress < 25) {
+
+        currentStop =
+          "Main Gate";
+
+        nextStop =
+          "Central Library";
+
+        eta =
+          3;
+
+        distance =
+          "0.4 km";
+
+      }
+
+
+      else if(progress < 48) {
+
+        currentStop =
+          "Central Library";
+
+        nextStop =
+          "Academic Block";
+
+        eta =
+          4;
+
+        distance =
+          "0.8 km";
+
+      }
+
+
+      else if(progress < 70) {
+
+        currentStop =
+          "Academic Block";
+
+        nextStop =
+          "Canteen";
+
+        eta =
+          5;
+
+        distance =
+          "1.1 km";
+
+      }
+
+
+      else if(progress < 88) {
+
+        currentStop =
+          "Canteen";
+
+        nextStop =
+          "Hostel Area";
+
+        eta =
+          4;
+
+        distance =
+          "0.7 km";
+
+      }
+
+
+      else {
+
+        currentStop =
+          "Hostel Area";
+
+        nextStop =
+          "Main Gate";
+
+        eta =
+          6;
+
+        distance =
+          "1.0 km";
+
+      }
+
+
+
+      document.getElementById(
+        "currentStop"
+      ).innerText =
+        currentStop;
+
+
+      document.getElementById(
+        "nextStop"
+      ).innerText =
+        nextStop;
+
+
+      document.getElementById(
+        "eta"
+      ).innerText =
+        eta + " min";
+
+
+      document.getElementById(
+        "bigEta"
+      ).innerText =
+        eta + " min";
+
+
+      document.getElementById(
+        "distance"
+      ).innerText =
+        distance;
+
+
+      updateStopCards(
+        currentStop,
+        nextStop
+      );
+
+
+      updateMapMarker(
+        progress
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       MAP MARKER
+    ========================================================== */
+
+    function updateMapMarker(
+      progress
+    ) {
+
+      const marker =
+        document.getElementById(
+          "busMarker"
+        );
+
+
+      let left;
+
+      let top;
+
+
+      if(progress < 25) {
+
+        left =
+          12 +
+          progress * .65;
+
+        top =
+          44;
+
+      }
+
+
+      else if(progress < 50) {
+
+        left =
+          31 +
+          (progress - 25) * .8;
+
+        top =
+          40 +
+          (progress - 25) * .25;
+
+      }
+
+
+      else if(progress < 75) {
+
+        left =
+          51 +
+          (progress - 50) * .8;
+
+        top =
+          48 -
+          (progress - 50) * .18;
+
+      }
+
+
+      else {
+
+        left =
+          71 +
+          (progress - 75) * .6;
+
+        top =
+          43 +
+          (progress - 75) * .35;
+
+      }
+
+
+      marker.style.left =
+        Math.min(left,88) +
+        "%";
+
+
+      marker.style.top =
+        Math.min(top,75) +
+        "%";
+
+    }
+
+
+
+    /* ==========================================================
+       STOP CARDS
+    ========================================================== */
+
+    function updateStopCards(
+      current,
+      next
+    ) {
+
+      const names = [
+
+        "Main Gate",
+
+        "Central Library",
+
+        "Academic Block",
+
+        "Canteen",
+
+        "Hostel Area"
+
+      ];
+
+
+      names.forEach(
+
+        function(name,index) {
+
+          const card =
+            document.getElementById(
+              "stopCard" +
+              (index + 1)
+            );
+
+
+          if(!card) return;
+
+
+          card.classList.remove(
+            "active"
+          );
+
+
+          if(
+            name === current ||
+            name === next
+          ) {
+
+            card.classList.add(
+              "active"
+            );
+
+          }
+
+        }
+
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       VOICE ANNOUNCEMENT
+    ========================================================== */
+
+    function speakArrival() {
+
+      const nextStop =
+        document.getElementById(
+          "nextStop"
+        ).innerText;
+
+
+      const eta =
+        document.getElementById(
+          "eta"
+        ).innerText;
+
+
+      speak(
+
+        "The next campus shuttle stop is " +
+        nextStop +
+        ". " +
+        "Estimated arrival is " +
+        eta +
+        "."
+
+      );
+
+
+      showMessage(
+
+        "Voice announcement played for " +
+        nextStop +
+        ".",
+
+        false
+
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       TEXT TO SPEECH
+    ========================================================== */
+
+    function speak(text) {
+
+      if(
+        !("speechSynthesis" in window)
+      ) {
+
+        return;
+
+      }
+
+
+      window.speechSynthesis.cancel();
+
+
+      const utterance =
+        new SpeechSynthesisUtterance(
+          text
+        );
+
+
+      utterance.lang =
+        document.getElementById(
+          "languagePicker"
+        ).value;
+
+
+      utterance.rate =
+        .88;
+
+
+      utterance.pitch =
+        1;
+
+
+      window.speechSynthesis.speak(
+        utterance
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       MESSAGE
+    ========================================================== */
+
+    function showMessage(
+      text,
+      error
+    ) {
+
+      const element =
+        document.getElementById(
+          "message"
+        );
+
+
+      element.innerText =
+        text;
+
+
+      element.className =
+        "message show " +
+        (
+          error
+            ? "error"
+            : "success"
+        );
+
+    }
+
+
+
+    /* ==========================================================
+       SOS
+    ========================================================== */
+
+    function triggerSOS() {
+
+      let locationText =
+        "GPS location unavailable.";
+
+
+      if(
+        userLat !== null &&
+        userLng !== null
+      ) {
+
+        locationText =
+          "Current GPS location is " +
+          userLat.toFixed(6) +
+          ", " +
+          userLng.toFixed(6);
+
+      }
+
+
+      const message =
+        "Emergency SOS activated. " +
+        locationText;
+
+
+      fetch("/api/sos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: userLat,
+          lng: userLng,
+          page: "shuttle",
+          message: message
+        })
+      }).catch(function(error) {
+        console.log("SOS log failed:", error);
+      });
+
+
+      speak(
+        "Emergency SOS activated."
+      );
+
+
+      if(navigator.vibrate) {
+
+        navigator.vibrate([
+          200,
+          100,
+          200
+        ]);
+
+      }
+
+
+      alert(
+        message
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       NAVIGATION
+    ========================================================== */
+
+    function goTo(page) {
+
+      window.location.href =
+        page;
+
+    }
+
+
+
+    /* ==========================================================
+       COMING SOON
+    ========================================================== */
+
+    function showComingSoon(
+      feature
+    ) {
+
+      showMessage(
+
+        feature +
+        " module is being prepared.",
+
+        false
+
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       LANGUAGE SUPPORT
+    ========================================================== */
+
+    const languageTranslations = {
+      "en-IN": {
+        gpsStatus: "GPS Locating...",
+        voiceAssistant: "AI Voice Assistant",
+        visualAi: "Visual AI Guidance",
+        wheelchair: "Wheelchair Access Routes",
+        shuttle: "Campus Shuttle Live",
+        sos: "EMERGENCY SOS",
+        pageTitle: "Campus Shuttle Live",
+        pageSubtitle: "Track campus shuttle movement, stops and estimated arrival times.",
+        routePlanner: "Shuttle Route Planner",
+        routeLabel: "SHUTTLE ROUTE",
+        stopLabel: "YOUR STOP",
+        trackShuttle: "Track Shuttle",
+        languageChanged: "Language changed to"
+      },
+      "ta-IN": {
+        gpsStatus: "ஜி.பி.எஸ் கண்டுபிடிக்கிறது...",
+        voiceAssistant: "AI குரல் உதவியாளர்",
+        visualAi: "விஷுவல் AI வழிகாட்டல்",
+        wheelchair: "சக்கர நாற்காலி அணுகல் வழிகள்",
+        shuttle: "கேம்பஸ் ஷட்டில் நேரடி",
+        sos: "அவசர SOS",
+        pageTitle: "கேம்பஸ் ஷட்டில் நேரடி",
+        pageSubtitle: "கேம்பஸ் ஷட்டில் இயக்கம், நிறுத்தங்கள் மற்றும் மதிப்பிடப்பட்ட வருகை நேரத்தை கண்காணிக்கவும்.",
+        routePlanner: "ஷட்டில் ரூட் பிளானர்",
+        routeLabel: "ஷட்டில் ரூட்",
+        stopLabel: "உங்கள் நிறுத்தம்",
+        trackShuttle: "ஷட்டிலை கண்காணிக்கவும்",
+        languageChanged: "மொழி மாற்றப்பட்டது:"
+      },
+      "hi-IN": {
+        gpsStatus: "जीपीएस定位 हो रहा है...",
+        voiceAssistant: "एआई वॉइस असिस्टेंट",
+        visualAi: "विज़ुअल AI मार्गदर्शन",
+        wheelchair: "व्हीलचेयर एक्सेस रूट्स",
+        shuttle: "कैम्पस शटल लाइव",
+        sos: "आपातकालीन SOS",
+        pageTitle: "कैम्पस शटल लाइव",
+        pageSubtitle: "कैम्पस शटल की चाल, स्टॉप और अनुमानित आगमन समय देखें।",
+        routePlanner: "शटल रूट प्लानर",
+        routeLabel: "शटल रूट",
+        stopLabel: "आपका स्टॉप",
+        trackShuttle: "शटल ट्रैक करें",
+        languageChanged: "भाषा बदली:"
+      },
+      "te-IN": {
+        gpsStatus: "GPS కనెక్ట్ అవుతుంది...",
+        voiceAssistant: "AI వాయిస్ అసిస్టెంట్",
+        visualAi: "విజువల్ AI మార్గదర్శన",
+        wheelchair: "వీల్చైర్ యాక్సెస్ మార్గాలు",
+        shuttle: "క్యాంపస్ షటిల్ లైవ్",
+        sos: "అత్యవసర SOS",
+        pageTitle: "క్యాంపస్ షటిల్ లైవ్",
+        pageSubtitle: "క్యాంపస్ షటిల్ చలనం, స్టాప్లు మరియు అంచనా చేరిన సమయాన్ని చూడండి.",
+        routePlanner: "షటిల్ మార్గ ప్లానర్",
+        routeLabel: "షటిల్ మార్గం",
+        stopLabel: "మీ స్టాప్",
+        trackShuttle: "షటిల్ ట్రాక్ చేయండి",
+        languageChanged: "భాష మార్చబడింది:"
+      },
+      "kn-IN": {
+        gpsStatus: "GPS ಹುಡುಕಲಾಗುತ್ತಿದೆ...",
+        voiceAssistant: "AI ಧ್ವನಿ ಸಹಾಯಕ",
+        visualAi: "ವಿಷುವಲ್ AI ಮಾರ್ಗದರ್ಶನ",
+        wheelchair: "ವೀಲ್‌ಚೇರ್ ಪ್ರವೇಶ ಮಾರ್ಗಗಳು",
+        shuttle: "ಕ್ಯಾಂಪಸ್ ಶಟ್ಲ್ ಲೈವ್",
+        sos: "ತುರ್ತು SOS",
+        pageTitle: "ಕ್ಯಾಂಪಸ್ ಶಟ್ಲ್ ಲೈವ್",
+        pageSubtitle: "ಕ್ಯಾಂಪಸ್ ಶಟ್ಲ್ ಚಲನೆ, ನಿಲ್ದಾಣಗಳು ಮತ್ತು ಅಂದಾಜು ಆಗಮನ ಸಮಯವನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.",
+        routePlanner: "ಶಟ್ಲ್ ಮಾರ್ಗ ಯೋಜನೆ",
+        routeLabel: "ಶಟ್ಲ್ ಮಾರ್ಗ",
+        stopLabel: "ನಿಮ್ಮ ನಿಲ್ದಾಣ",
+        trackShuttle: "ಶಟ್ಲ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+        languageChanged: "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗಿದೆ:"
+      },
+      "ml-IN": {
+        gpsStatus: "GPS കണ്ടെത്തുന്നു...",
+        voiceAssistant: "AI വോയ്‌സ് അസിസ്റ്റന്റ്",
+        visualAi: "വിഷ്വൽ AI മാർഗ്ഗനിർദ്ദേശം",
+        wheelchair: "വിഐൽചെയർ ആക്സസ് റൂട്ടുകൾ",
+        shuttle: "കാമ്പസ് ഷട്ടിൽ ലൈവ്",
+        sos: "അടിയന്തര SOS",
+        pageTitle: "കാമ്പസ് ഷട്ടിൽ ലൈവ്",
+        pageSubtitle: "കാമ്പസ് ഷട്ടിൽ ചലനം, സ്റ്റോപ്പുകൾ, അതുപോലെ espered‌ എത്തുമെന്ന കാലം കാണുക.",
+        routePlanner: "ഷട്ടിൽ റൂട്ട്പ്ലാനർ",
+        routeLabel: "ഷട്ടിൽ റൂട്ട്",
+        stopLabel: "നിങ്ങളുടെ സ്റ്റോപ്പ്",
+        trackShuttle: "ഷട്ടിൽ ട്രാക്ക് ചെയ്യുക",
+        languageChanged: "ഭാഷ മാറി:"
+      }
+    };
+
+    let currentLanguage = localStorage.getItem("accessPathLanguage") || "en-IN";
+
+    function getLocalizedText(key) {
+      return (languageTranslations[currentLanguage] && languageTranslations[currentLanguage][key]) || languageTranslations["en-IN"][key] || key;
+    }
+
+    function applyLanguageUI() {
+      const selectedLanguage = languageTranslations[currentLanguage] ? currentLanguage : "en-IN";
+      currentLanguage = selectedLanguage;
+      const picker = document.getElementById("languagePicker");
+      if (picker) picker.value = selectedLanguage;
+      document.documentElement.lang = selectedLanguage;
+
+      const menuItems = document.querySelectorAll(".menu-item");
+      const menuText = [
+        getLocalizedText("voiceAssistant"),
+        getLocalizedText("visualAi"),
+        getLocalizedText("wheelchair"),
+        getLocalizedText("shuttle")
+      ];
+
+      menuItems.forEach((item, index) => {
+        if (index >= menuText.length) return;
+
+        const span = item.querySelector("span");
+        if (span) {
+          span.textContent = menuText[index];
+          return;
+        }
+
+        Array.from(item.childNodes).forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+            node.textContent = menuText[index];
+          }
+        });
+      });
+
+      const sosButton = document.querySelector(".sos-btn");
+      if (sosButton) {
+        const textNode = Array.from(sosButton.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        if (textNode) textNode.textContent = getLocalizedText("sos");
+      }
+
+      const gpsStatus = document.getElementById("gpsStatus");
+      if (gpsStatus) gpsStatus.textContent = getLocalizedText("gpsStatus");
+
+      const heading = document.querySelector(".heading-text h1");
+      if (heading) heading.textContent = getLocalizedText("pageTitle");
+
+      const subtitle = document.querySelector(".heading-text p");
+      if (subtitle) subtitle.textContent = getLocalizedText("pageSubtitle");
+
+      const routePlanner = document.querySelector(".section-title");
+      if (routePlanner) routePlanner.innerHTML = '<i data-lucide="route"></i>' + getLocalizedText("routePlanner");
+
+      const routeLabel = document.querySelector("#routeSelect")?.closest(".field")?.querySelector("label");
+      if (routeLabel) routeLabel.textContent = getLocalizedText("routeLabel");
+
+      const stopLabel = document.querySelector("#stopSelect")?.closest(".field")?.querySelector("label");
+      if (stopLabel) stopLabel.textContent = getLocalizedText("stopLabel");
+
+      const trackBtn = document.querySelector(".track-btn");
+      if (trackBtn) {
+        const btnText = Array.from(trackBtn.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        if (btnText) btnText.textContent = getLocalizedText("trackShuttle");
+      }
+
+      localStorage.setItem("accessPathLanguage", currentLanguage);
+    }
+
+    document
+      .getElementById("languagePicker")
+      .addEventListener("change", function() {
+        currentLanguage = this.value;
+        applyLanguageUI();
+        showMessage(
+          getLocalizedText("languageChanged") + " " + this.options[this.selectedIndex]?.text + ".",
+          false
+        );
+      });
+
+    const savedLanguage = localStorage.getItem("accessPathLanguage");
+    if (savedLanguage && languageTranslations[savedLanguage]) {
+      currentLanguage = savedLanguage;
+    }
+    applyLanguageUI();
+
+
+
+    /* ==========================================================
+       INITIALIZE
+    ========================================================== */
+
+    window.addEventListener(
+      "load",
+      function() {
+
+        lucide.createIcons();
+
+        startGPS();
+
+        startSimulation();
+
+      }
+    );
+
+
+
+    /* ==========================================================
+       CLEANUP
+    ========================================================== */
+
+    window.addEventListener(
+      "beforeunload",
+      function() {
+
+        if(simulationTimer) {
+
+          clearInterval(
+            simulationTimer
+          );
+
+        }
+
+
+        if(
+          "speechSynthesis" in window
+        ) {
+
+          window.speechSynthesis.cancel();
+
+        }
+
+      }
+    );
+
+  </script>
+
+
+</body>
+
+</html>

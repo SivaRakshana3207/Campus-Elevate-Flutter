@@ -1,0 +1,5716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AccessPathAI — Visual AI Guidance</title>
+
+  <!-- =====================================================
+       LUCIDE ICONS
+  ====================================================== -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- =====================================================
+       TENSORFLOW.JS
+  ====================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0"></script>
+
+  <!-- =====================================================
+       COCO-SSD OBJECT DETECTION
+  ====================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+  <style>
+
+    /* =====================================================
+       ROOT
+    ====================================================== */
+
+    :root {
+      --wine: #800020;
+      --wine-dark: #680019;
+      --wine-soft: #f6e9ed;
+
+      --green: #15803d;
+      --green-soft: #eaf7ee;
+
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+
+      --orange: #ea580c;
+      --orange-soft: #fff7ed;
+
+      --red: #dc2626;
+      --red-dark: #b91c1c;
+      --red-soft: #fef2f2;
+
+      --text: #171717;
+      --muted: #666;
+
+      --border: #e5e5e5;
+
+      --bg: #f8f8f8;
+
+      --white: #ffffff;
+
+      --shadow:
+        0 12px 35px rgba(0, 0, 0, .08);
+
+      --font:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+
+    /* =====================================================
+       RESET
+    ====================================================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       TOP NAVIGATION
+    ====================================================== */
+
+    nav.top-nav {
+      width: 100%;
+      height: 68px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 28px;
+
+      position: sticky;
+      top: 0;
+
+      z-index: 1000;
+    }
+
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: var(--wine);
+      color: white;
+
+      border-radius: 12px;
+    }
+
+
+    .brand-logo svg {
+      width: 23px;
+      height: 23px;
+    }
+
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 900;
+
+      color: var(--wine);
+
+      letter-spacing: -.3px;
+    }
+
+
+    .brand-subtitle {
+      font-size: 10px;
+      font-weight: 700;
+
+      color: #777;
+
+      margin-top: 2px;
+    }
+
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+
+    /* =====================================================
+       GPS STATUS
+    ====================================================== */
+
+    .gps-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 8px 12px;
+
+      border-radius: 999px;
+
+      background: var(--green-soft);
+      color: var(--green);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+
+    .gps-dot {
+      width: 8px;
+      height: 8px;
+
+      background: var(--green);
+
+      border-radius: 50%;
+
+      animation: gpsPulse 1.7s infinite;
+    }
+
+
+    @keyframes gpsPulse {
+
+      0% {
+        box-shadow:
+          0 0 0 0
+          rgba(21, 128, 61, .4);
+      }
+
+      70% {
+        box-shadow:
+          0 0 0 7px
+          rgba(21, 128, 61, 0);
+      }
+
+      100% {
+        box-shadow:
+          0 0 0 0
+          rgba(21, 128, 61, 0);
+      }
+
+    }
+
+
+    /* =====================================================
+       LANGUAGE
+    ====================================================== */
+
+    .language-select {
+      border: 1px solid var(--border);
+
+      background: white;
+
+      color: var(--text);
+
+      border-radius: 12px;
+
+      padding: 10px 13px;
+
+      font-size: 12px;
+
+      font-weight: 700;
+
+      outline: none;
+    }
+
+
+    /* =====================================================
+       DASHBOARD LAYOUT
+    ====================================================== */
+
+    .dashboard {
+      display: flex;
+      min-height: calc(100vh - 68px);
+    }
+
+
+    aside {
+      width: 320px;
+      flex: 0 0 320px;
+      background: #fcf9f9;
+      border-right: 1px solid var(--border);
+      padding: 30px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #656565;
+      margin-bottom: 17px;
+    }
+
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+
+    .menu-item {
+      width: 100%;
+      min-height: 57px;
+      border: none;
+      border-radius: 13px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 18px;
+      color: #1d1d1d;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      transition: .2s ease;
+    }
+
+
+    .menu-item svg {
+      width: 23px;
+      height: 23px;
+      flex-shrink: 0;
+    }
+
+
+    .menu-item:hover {
+      background: var(--wine-soft);
+      color: var(--wine);
+    }
+
+
+    .menu-item.active {
+      background: #f1e3e7;
+      color: var(--wine);
+    }
+
+
+    .sos-btn {
+      width: 100%;
+      min-height: 69px;
+      border: none;
+      border-radius: 14px;
+      background: #e52424;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 7px 18px rgba(220, 38, 38, .25);
+      transition: .2s ease;
+    }
+
+
+    .sos-btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+    }
+
+
+    .sos-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 28px;
+      background: var(--bg);
+    }
+
+
+    .main-inner {
+      width: 100%;
+      max-width: 1500px;
+      margin: auto;
+    }
+
+
+    /* =====================================================
+       PAGE HEADER
+    ====================================================== */
+
+    .page-header {
+      display: flex;
+
+      align-items: flex-start;
+
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-bottom: 25px;
+    }
+
+
+    .page-title-section h1 {
+      font-size: 32px;
+
+      font-weight: 950;
+
+      letter-spacing: -1px;
+    }
+
+
+    .page-title-section h1 span {
+      color: var(--wine);
+    }
+
+
+    .page-title-section p {
+      margin-top: 8px;
+
+      max-width: 720px;
+
+      color: var(--muted);
+
+      font-size: 14px;
+
+      line-height: 1.65;
+    }
+
+
+    .ai-pill {
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      background: var(--wine-soft);
+
+      color: var(--wine);
+
+      padding: 9px 13px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .ai-pill-dot {
+      width: 8px;
+      height: 8px;
+
+      border-radius: 50%;
+
+      background: var(--wine);
+
+      animation: aiPulse 1.6s infinite;
+    }
+
+
+    @keyframes aiPulse {
+
+      0% {
+        box-shadow:
+          0 0 0 0
+          rgba(128, 0, 32, .35);
+      }
+
+      70% {
+        box-shadow:
+          0 0 0 7px
+          rgba(128, 0, 32, 0);
+      }
+
+      100% {
+        box-shadow:
+          0 0 0 0
+          rgba(128, 0, 32, 0);
+      }
+
+    }
+
+
+    /* =====================================================
+       DESTINATION BAR
+    ====================================================== */
+
+    .destination-bar {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: 18px;
+
+      padding: 16px 18px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 14px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 24px;
+    }
+
+
+    .destination-icon {
+      width: 44px;
+      height: 44px;
+
+      flex-shrink: 0;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      background: var(--wine-soft);
+
+      color: var(--wine);
+
+      border-radius: 13px;
+    }
+
+
+    .destination-content {
+      flex: 1;
+
+      min-width: 0;
+    }
+
+
+    .destination-content small {
+      display: block;
+
+      color: #888;
+
+      text-transform: uppercase;
+
+      letter-spacing: .7px;
+
+      font-size: 10px;
+
+      font-weight: 800;
+    }
+
+
+    .destination-select {
+      width: 100%;
+
+      margin-top: 4px;
+
+      border: none;
+
+      outline: none;
+
+      background: transparent;
+
+      color: var(--text);
+
+      font-size: 15px;
+
+      font-weight: 850;
+    }
+
+
+    .start-guidance-btn {
+      border: none;
+
+      background: var(--wine);
+
+      color: white;
+
+      border-radius: 12px;
+
+      padding: 12px 17px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      font-size: 12px;
+
+      font-weight: 900;
+    }
+
+
+    .start-guidance-btn:hover {
+      background: var(--wine-dark);
+    }
+
+
+    /* =====================================================
+       DASHBOARD GRID
+    ====================================================== */
+
+    .dashboard-grid {
+      display: grid;
+
+      grid-template-columns: 1.35fr .8fr;
+
+      gap: 24px;
+    }
+
+
+    /* =====================================================
+       CAMERA CARD
+    ====================================================== */
+
+    .camera-card {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: 22px;
+
+      overflow: hidden;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .card-header {
+      padding: 18px 20px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+
+    .card-header-left {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+    }
+
+
+    .card-header-icon {
+      width: 38px;
+      height: 38px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      background: var(--wine-soft);
+
+      color: var(--wine);
+
+      border-radius: 11px;
+    }
+
+
+    .card-header h2 {
+      font-size: 16px;
+
+      font-weight: 900;
+    }
+
+
+    .camera-status {
+      display: flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      color: var(--green);
+
+      font-size: 10px;
+
+      font-weight: 900;
+    }
+
+
+    .camera-status-dot {
+      width: 7px;
+      height: 7px;
+
+      background: var(--green);
+
+      border-radius: 50%;
+    }
+
+
+    /* =====================================================
+       CAMERA VIEW
+    ====================================================== */
+
+    .camera-container {
+      position: relative;
+
+      min-height: 530px;
+
+      background: #151515;
+
+      overflow: hidden;
+    }
+
+
+    #cameraVideo {
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      display: none;
+    }
+
+
+    #detectionCanvas {
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      pointer-events: none;
+
+      z-index: 5;
+    }
+
+
+    .camera-placeholder {
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 30px;
+
+      text-align: center;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at center,
+          #303030,
+          #101010
+        );
+
+      z-index: 2;
+    }
+
+
+    .camera-placeholder-icon {
+      width: 86px;
+      height: 86px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background:
+        rgba(255, 255, 255, .08);
+
+      color: white;
+
+      margin-bottom: 20px;
+    }
+
+
+    .camera-placeholder-icon svg {
+      width: 42px;
+      height: 42px;
+    }
+
+
+    .camera-placeholder h3 {
+      font-size: 21px;
+
+      font-weight: 900;
+    }
+
+
+    .camera-placeholder p {
+      max-width: 430px;
+
+      margin-top: 8px;
+
+      color: #cfcfcf;
+
+      font-size: 12px;
+
+      line-height: 1.6;
+    }
+
+
+    .camera-start-btn {
+      margin-top: 20px;
+
+      border: none;
+
+      background: white;
+
+      color: var(--wine);
+
+      padding: 13px 19px;
+
+      border-radius: 12px;
+
+      font-size: 12px;
+
+      font-weight: 900;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+    }
+
+
+    /* =====================================================
+       CAMERA OVERLAY
+    ====================================================== */
+
+    .camera-overlay {
+      position: absolute;
+
+      inset: 0;
+
+      pointer-events: none;
+
+      z-index: 10;
+    }
+
+
+    .direction-arrow {
+      position: absolute;
+
+      left: 50%;
+      top: 47%;
+
+      transform:
+        translate(-50%, -50%);
+
+      width: 90px;
+      height: 90px;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      background:
+        rgba(128, 0, 32, .9);
+
+      color: white;
+
+      border-radius: 50%;
+
+      box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, .35);
+
+      animation:
+        arrowPulse 1.5s infinite;
+    }
+
+
+    .direction-arrow svg {
+      width: 46px;
+      height: 46px;
+
+      stroke-width: 2.8;
+    }
+
+
+    @keyframes arrowPulse {
+
+      0% {
+        transform:
+          translate(-50%, -50%)
+          scale(1);
+      }
+
+      50% {
+        transform:
+          translate(-50%, -50%)
+          scale(1.08);
+      }
+
+      100% {
+        transform:
+          translate(-50%, -50%)
+          scale(1);
+      }
+
+    }
+
+
+    /* =====================================================
+       CAMERA TOP STATUS
+    ====================================================== */
+
+    .camera-live-status {
+      position: absolute;
+
+      top: 15px;
+
+      left: 15px;
+      right: 15px;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+
+    .live-analysis {
+      background:
+        rgba(0, 0, 0, .7);
+
+      color: white;
+
+      padding: 8px 11px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+
+      font-weight: 800;
+
+      backdrop-filter: blur(8px);
+    }
+
+
+    .distance-status {
+      background:
+        rgba(128, 0, 32, .9);
+
+      color: white;
+
+      padding: 8px 11px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+
+      font-weight: 900;
+    }
+
+
+    /* =====================================================
+       CAMERA CONTROLS
+    ====================================================== */
+
+    .camera-controls {
+      position: absolute;
+
+      left: 15px;
+      right: 15px;
+
+      bottom: 15px;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 10px;
+    }
+
+
+    .camera-control-btn {
+      width: 48px;
+      height: 48px;
+
+      border: none;
+
+      border-radius: 50%;
+
+      background:
+        rgba(255, 255, 255, .95);
+
+      color: var(--wine);
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      box-shadow:
+        0 5px 18px
+        rgba(0, 0, 0, .25);
+    }
+
+
+    .camera-control-btn.main {
+      width: 58px;
+      height: 58px;
+
+      background: var(--wine);
+
+      color: white;
+    }
+
+
+    /* =====================================================
+       RIGHT PANEL
+    ====================================================== */
+
+    .right-panel {
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 18px;
+    }
+
+
+    /* =====================================================
+       AI STATUS
+    ====================================================== */
+
+    .ai-status-card {
+      background: var(--wine);
+
+      color: white;
+
+      border-radius: 20px;
+
+      padding: 22px;
+
+      box-shadow:
+        0 12px 35px
+        rgba(128, 0, 32, .22);
+    }
+
+
+    .ai-status-label {
+      font-size: 10px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+      opacity: .75;
+
+      font-weight: 800;
+    }
+
+
+    .ai-status-card h2 {
+      margin-top: 7px;
+
+      font-size: 25px;
+
+      font-weight: 950;
+    }
+
+
+    .ai-status-card p {
+      margin-top: 6px;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+
+      opacity: .88;
+    }
+
+
+    .ai-status-indicator {
+      margin-top: 17px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+      font-size: 11px;
+
+      font-weight: 800;
+    }
+
+
+    .ai-status-indicator span {
+      width: 9px;
+      height: 9px;
+
+      border-radius: 50%;
+
+      background: #4ade80;
+    }
+
+
+    /* =====================================================
+       DETECTION CARD
+    ====================================================== */
+
+    .obstacle-card {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: 20px;
+
+      padding: 18px;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .section-heading {
+      display: flex;
+
+      align-items: center;
+
+      gap: 9px;
+
+      font-size: 14px;
+
+      font-weight: 900;
+    }
+
+
+    .section-heading-icon {
+      width: 34px;
+      height: 34px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: var(--orange-soft);
+
+      color: var(--orange);
+    }
+
+
+    .obstacle-status {
+      margin-top: 15px;
+
+      padding: 14px;
+
+      border-radius: 14px;
+
+      background: var(--green-soft);
+
+      border: 1px solid #ccebd6;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 11px;
+    }
+
+
+    .obstacle-status-icon {
+      color: var(--green);
+
+      flex-shrink: 0;
+    }
+
+
+    .obstacle-status strong {
+      display: block;
+
+      font-size: 12px;
+
+      color: #126332;
+    }
+
+
+    .obstacle-status span {
+      display: block;
+
+      margin-top: 3px;
+
+      color: #477455;
+
+      font-size: 10px;
+    }
+
+
+    /* =====================================================
+       DETECTION SUMMARY
+    ====================================================== */
+
+    .detection-summary {
+      margin-top: 12px;
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 7px;
+    }
+
+
+    .detection-tag {
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      background: #f4f4f4;
+
+      color: #555;
+
+      font-size: 9px;
+
+      font-weight: 800;
+    }
+
+
+    /* =====================================================
+       GUIDANCE CARD
+    ====================================================== */
+
+    .guidance-card {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: 20px;
+
+      overflow: hidden;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .guidance-title {
+      padding: 17px 18px;
+
+      border-bottom: 1px solid var(--border);
+
+      font-size: 14px;
+
+      font-weight: 900;
+    }
+
+
+    .guidance-step {
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 13px 17px;
+
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+
+    .guidance-step:last-child {
+      border-bottom: none;
+    }
+
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+
+      flex-shrink: 0;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: var(--wine-soft);
+
+      color: var(--wine);
+
+      font-size: 11px;
+
+      font-weight: 900;
+    }
+
+
+    .guidance-step strong {
+      display: block;
+
+      font-size: 11px;
+    }
+
+
+    .guidance-step span {
+      display: block;
+
+      margin-top: 2px;
+
+      color: #888;
+
+      font-size: 9px;
+    }
+
+
+    /* =====================================================
+       VOICE GUIDANCE
+    ====================================================== */
+
+    .voice-guidance-btn {
+      width: 100%;
+
+      border: none;
+
+      background: var(--blue);
+
+      color: white;
+
+      border-radius: 15px;
+
+      padding: 14px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 9px;
+
+      font-size: 12px;
+
+      font-weight: 900;
+
+      box-shadow:
+        0 8px 20px
+        rgba(37, 99, 235, .18);
+    }
+
+
+    .voice-guidance-btn:hover {
+      background: #1d4ed8;
+    }
+
+
+    /* =====================================================
+       GPS INFO
+    ====================================================== */
+
+    .gps-card {
+      background: var(--blue-soft);
+
+      border: 1px solid #dbeafe;
+
+      border-radius: 18px;
+
+      padding: 16px;
+
+      display: flex;
+
+      gap: 11px;
+    }
+
+
+    .gps-card-icon {
+      color: var(--blue);
+
+      flex-shrink: 0;
+    }
+
+
+    .gps-card h3 {
+      font-size: 12px;
+
+      font-weight: 900;
+
+      color: #1e40af;
+    }
+
+
+    .gps-card p {
+      margin-top: 4px;
+
+      font-size: 10px;
+
+      line-height: 1.5;
+
+      color: #4969a8;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message-box {
+      position: fixed;
+
+      left: 50%;
+
+      bottom: 25px;
+
+      transform:
+        translateX(-50%)
+        translateY(120px);
+
+      background: #171717;
+
+      color: white;
+
+      padding: 13px 17px;
+
+      border-radius: 12px;
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      z-index: 100000;
+
+      opacity: 0;
+
+      transition: .3s ease;
+
+      max-width: calc(100% - 30px);
+
+      text-align: center;
+    }
+
+
+    .message-box.show {
+      opacity: 1;
+
+      transform:
+        translateX(-50%)
+        translateY(0);
+    }
+
+
+    /* =====================================================
+       MOBILE BOTTOM NAV
+    ====================================================== */
+
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+
+    /* =====================================================
+       FLOATING SOS
+    ====================================================== */
+
+    .mobile-sos-button {
+      display: none;
+    }
+
+
+    /* =====================================================
+       TABLET
+    ====================================================== */
+
+    @media (max-width: 1100px) {
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .right-panel {
+        display: grid;
+
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .ai-status-card {
+        grid-row: span 2;
+      }
+
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media (max-width: 800px) {
+
+      body {
+        padding-bottom: 82px;
+      }
+
+
+      .dashboard {
+        display: block;
+      }
+
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+
+      .right-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+
+      .ai-status-card {
+        grid-row: span 2;
+      }
+
+
+      aside {
+        display: none;
+      }
+
+
+      nav.top-nav {
+        height: 62px;
+
+        padding: 0 15px;
+      }
+
+
+      .brand-title {
+        font-size: 16px;
+      }
+
+
+      .brand-subtitle {
+        display: none;
+      }
+
+
+      .gps-status {
+        padding: 7px 9px;
+
+        font-size: 10px;
+      }
+
+
+      .gps-status span:not(.gps-dot) {
+        display: none;
+      }
+
+
+      main {
+        width: 100%;
+        padding: 18px 14px;
+      }
+
+
+      .page-header {
+        flex-direction: column;
+
+        gap: 12px;
+      }
+
+
+      .page-title-section h1 {
+        font-size: 25px;
+      }
+
+
+      .page-title-section p {
+        font-size: 12px;
+      }
+
+
+      .ai-pill {
+        font-size: 10px;
+      }
+
+
+      .destination-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+
+      .destination-content {
+        width: 100%;
+      }
+
+
+      .start-guidance-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+      }
+
+
+      .start-guidance-btn span {
+        display: none;
+      }
+
+
+      .camera-container {
+        min-height: 470px;
+      }
+
+
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+      }
+
+
+      /* =================================================
+         BOTTOM NAV
+      ================================================= */
+
+      .mobile-bottom-nav {
+
+        position: fixed !important;
+
+        top: auto !important;
+
+        left: 0;
+
+        right: 0;
+
+        bottom: 0;
+
+        width: 100%;
+
+        height: 76px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-around;
+
+        background:
+          rgba(255, 255, 255, .98);
+
+        border-top:
+          1px solid var(--border);
+
+        border-bottom: none;
+
+        box-shadow:
+          0 -6px 25px
+          rgba(0, 0, 0, .10);
+
+        padding: 5px 7px;
+
+        padding-bottom:
+          calc(
+            5px +
+            env(safe-area-inset-bottom)
+          );
+
+        z-index: 99999;
+      }
+
+
+      .mobile-nav-item {
+
+        flex: 1;
+
+        min-width: 0;
+
+        height: 64px;
+
+        border: none;
+
+        border-radius: 14px;
+
+        background: transparent;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 5px;
+
+        color: #666;
+
+        font-family: var(--font);
+
+        font-size: 9px;
+
+        font-weight: 800;
+
+        cursor: pointer;
+
+        transition:
+          background .2s ease,
+          color .2s ease,
+          transform .15s ease;
+
+        -webkit-tap-highlight-color:
+          transparent;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width: 22px;
+
+        height: 22px;
+
+        stroke-width: 2.5;
+      }
+
+
+      .mobile-nav-item.active {
+
+        background:
+          var(--wine-soft);
+
+        color:
+          var(--wine);
+      }
+
+
+      .mobile-nav-item:hover,
+      .mobile-nav-item:focus-visible {
+
+        background:
+          var(--wine-soft);
+
+        color:
+          var(--wine);
+
+        outline: none;
+      }
+
+
+      .mobile-nav-item:active {
+
+        transform:
+          scale(.93);
+      }
+
+
+      /* =================================================
+         FLOATING SOS
+      ================================================= */
+
+      .mobile-sos-button {
+
+        position: fixed;
+
+        right: 24px;
+
+        bottom: 96px;
+
+        width: 64px;
+
+        height: 64px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border: none;
+
+        border-radius: 50%;
+
+        background:
+          #ef1f25;
+
+        color: white;
+
+        box-shadow:
+          0 8px 25px
+          rgba(239, 31, 37, .35);
+
+        z-index: 99998;
+
+        cursor: pointer;
+
+        transition:
+          transform .2s ease,
+          box-shadow .2s ease;
+      }
+
+
+      .mobile-sos-button svg {
+
+        width: 32px;
+
+        height: 32px;
+
+        stroke-width: 2.5;
+      }
+
+
+      .mobile-sos-button:active {
+
+        transform:
+          scale(.90);
+      }
+
+
+      .mobile-sos-button:hover {
+
+        box-shadow:
+          0 10px 30px
+          rgba(239, 31, 37, .45);
+      }
+
+    }
+
+
+    /* =====================================================
+       SMALL MOBILE
+    ====================================================== */
+
+    @media (max-width: 520px) {
+
+      body {
+        padding-bottom: 74px;
+      }
+
+
+      .brand-logo {
+
+        width: 36px;
+
+        height: 36px;
+      }
+
+
+      .brand-logo svg {
+
+        width: 20px;
+
+        height: 20px;
+      }
+
+
+      .brand-title {
+
+        font-size: 14px;
+      }
+
+
+      .language-select {
+
+        font-size: 10px;
+
+        padding: 8px;
+      }
+
+
+      .destination-bar {
+
+        flex-wrap: wrap;
+      }
+
+
+      .destination-content {
+
+        width:
+          calc(100% - 60px);
+      }
+
+
+      .start-guidance-btn {
+
+        width: 100%;
+
+        justify-content: center;
+      }
+
+
+      .start-guidance-btn span {
+
+        display: inline;
+      }
+
+
+      .camera-container {
+
+        min-height: 410px;
+      }
+
+
+      .mobile-bottom-nav {
+
+        height: 70px;
+      }
+
+
+      .mobile-nav-item {
+
+        height: 59px;
+
+        font-size: 8px;
+
+        gap: 4px;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width: 21px;
+
+        height: 21px;
+      }
+
+
+      .mobile-sos-button {
+
+        width: 60px;
+
+        height: 60px;
+
+        right: 22px;
+
+        bottom: 88px;
+      }
+
+
+      .mobile-sos-button svg {
+
+        width: 30px;
+
+        height: 30px;
+      }
+
+    }
+
+
+    /* =====================================================
+       VERY SMALL MOBILE
+    ====================================================== */
+
+    @media (max-width: 360px) {
+
+      .mobile-nav-item {
+
+        font-size: 7px;
+      }
+
+
+      .mobile-nav-item svg {
+
+        width: 19px;
+
+        height: 19px;
+      }
+
+
+      .mobile-sos-button {
+
+        width: 56px;
+
+        height: 56px;
+
+        right: 18px;
+
+        bottom: 86px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- =====================================================
+       TOP NAVIGATION
+  ====================================================== -->
+
+  <nav
+    class="top-nav"
+    aria-label="Main navigation"
+  >
+
+    <div class="brand">
+
+      <div class="brand-logo">
+        <i data-lucide="compass"></i>
+      </div>
+
+
+      <div class="brand-text">
+
+        <div class="brand-title">
+          AccessPath AI
+        </div>
+
+        <div class="brand-subtitle">
+          Accessible Smart Campus
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="nav-right">
+
+      <div
+        class="gps-status"
+        id="gpsStatus"
+      >
+
+        <span class="gps-dot"></span>
+
+        <span id="gpsText">
+          GPS Connecting...
+        </span>
+
+      </div>
+
+
+      <select
+        id="languageSelect"
+        class="language-select"
+        aria-label="Select language"
+      >
+
+        <option value="en-IN">
+          English (India)
+        </option>
+
+        <option value="ta-IN">
+          தமிழ்
+        </option>
+
+        <option value="hi-IN">
+          हिन्दी
+        </option>
+
+        <option value="te-IN">
+          తెలుగు
+        </option>
+
+        <option value="kn-IN">
+          ಕನ್ನಡ
+        </option>
+
+        <option value="ml-IN">
+          മലയാളം
+        </option>
+
+      </select>
+
+    </div>
+
+  </nav>
+
+
+  <!-- =====================================================
+       DASHBOARD
+  ====================================================== -->
+
+  <div class="dashboard">
+
+    <aside>
+
+      <div>
+
+        <div class="sidebar-title">
+          Navigation Dashboard
+        </div>
+
+        <div class="menu">
+
+          <button class="menu-item" type="button" onclick="window.location.href='index.html'">
+            <i data-lucide="bot"></i>
+            <span>AI Voice Assistant</span>
+          </button>
+
+          <button class="menu-item active" type="button" aria-current="page">
+            <i data-lucide="eye"></i>
+            <span>Visual AI Guidance</span>
+          </button>
+
+          <button class="menu-item" type="button" onclick="window.location.href='wheelchair.html'">
+            <i data-lucide="accessibility"></i>
+            <span>Wheelchair Access Routes</span>
+          </button>
+
+          <button class="menu-item" type="button" onclick="window.location.href='shuttle.html'">
+            <i data-lucide="bus"></i>
+            <span>Campus Shuttle Live</span>
+          </button>
+
+        </div>
+
+      </div>
+
+      <button class="sos-btn" type="button" onclick="triggerSOS()">
+        <i data-lucide="alert-triangle"></i>
+        EMERGENCY SOS
+      </button>
+
+    </aside>
+
+    <main>
+
+      <div class="main-inner">
+
+        <!-- ===================================================
+             PAGE HEADER
+        ==================================================== -->
+
+    <section class="page-header">
+
+      <div class="page-title-section">
+
+        <h1 id="pageTitleText">
+          Visual <span>AI Guidance</span>
+        </h1>
+
+        <p id="pageDescriptionText">
+          Use your camera to receive real-time AI-assisted
+          visual and voice guidance while travelling through
+          Sathyabama Institute of Science and Technology.
+          AccessPathAI detects supported objects and warns
+          when an object appears near the likely walking path.
+        </p>
+
+      </div>
+
+
+      <div class="ai-pill" id="aiReadyBadge">
+
+        <span class="ai-pill-dot"></span>
+
+        <span id="aiReadyText">VISION AI READY</span>
+
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         DESTINATION
+    ==================================================== -->
+
+    <section class="destination-bar">
+
+      <div class="destination-icon">
+
+        <i data-lucide="map-pin"></i>
+
+      </div>
+
+
+      <div class="destination-content">
+
+        <small id="destinationLabel">
+          Select destination
+        </small>
+
+
+        <select
+          id="destinationSelect"
+          class="destination-select"
+          aria-label="Select campus destination"
+        >
+
+          <option value="">
+            Choose a destination
+          </option>
+
+          <option value="Central Library">
+            Central Library
+          </option>
+
+          <option value="Admin Block">
+            Admin Block
+          </option>
+
+          <option value="CSE Block">
+            CSE Block
+          </option>
+
+          <option value="ECE Block">
+            ECE Block
+          </option>
+
+          <option value="EEE Block">
+            EEE Block
+          </option>
+
+          <option value="Mechanical Block">
+            Mechanical Block
+          </option>
+
+          <option value="Civil Block">
+            Civil Block
+          </option>
+
+          <option value="Auditorium">
+            Auditorium
+          </option>
+
+          <option value="Seminar Hall">
+            Seminar Hall
+          </option>
+
+          <option value="Canteen">
+            Canteen
+          </option>
+
+          <option value="Medical Centre">
+            Medical Centre
+          </option>
+
+          <option value="Placement Cell">
+            Placement Cell
+          </option>
+
+          <option value="Main Gate">
+            Main Gate
+          </option>
+
+          <option value="Parking">
+            Parking
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <button
+        class="start-guidance-btn"
+        type="button"
+        onclick="startGuidance()"
+      >
+
+        <i data-lucide="navigation"></i>
+
+        <span id="startGuidanceBtnText">
+          Start AI Guidance
+        </span>
+
+      </button>
+
+    </section>
+
+
+    <!-- ===================================================
+         DASHBOARD
+    ==================================================== -->
+
+    <section class="dashboard-grid">
+
+
+      <!-- =================================================
+           CAMERA
+      ================================================== -->
+
+      <div class="camera-card">
+
+
+        <div class="card-header">
+
+          <div class="card-header-left">
+
+            <div class="card-header-icon">
+
+              <i data-lucide="camera"></i>
+
+            </div>
+
+
+            <h2>
+              Visual Guidance Camera
+            </h2>
+
+          </div>
+
+
+          <div class="camera-status">
+
+            <span class="camera-status-dot"></span>
+
+            <span id="cameraStatus">
+              READY
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="camera-container">
+
+
+          <!-- CAMERA -->
+
+          <video
+            id="cameraVideo"
+            autoplay
+            playsinline
+            muted
+          ></video>
+
+
+          <!-- REAL AI DETECTION CANVAS -->
+
+          <canvas
+            id="detectionCanvas"
+          ></canvas>
+
+
+          <!-- PLACEHOLDER -->
+
+          <div
+            class="camera-placeholder"
+            id="cameraPlaceholder"
+          >
+
+            <div class="camera-placeholder-icon">
+
+              <i data-lucide="scan-eye"></i>
+
+            </div>
+
+
+            <h3 id="cameraPlaceholderTitle">
+              Start Visual Guidance
+            </h3>
+
+
+            <p id="cameraPlaceholderText">
+              Enable your camera so AccessPathAI can use
+              browser-based Vision AI to detect supported
+              objects, people and vehicles and provide
+              voice-friendly safety warnings.
+            </p>
+
+
+            <button
+              class="camera-start-btn"
+              type="button"
+              onclick="startCamera()"
+            >
+
+              <i data-lucide="camera"></i>
+
+              <span id="cameraStartText">Enable Camera</span>
+
+            </button>
+
+          </div>
+
+
+          <!-- CAMERA OVERLAY -->
+
+          <div
+            class="camera-overlay"
+            id="cameraOverlay"
+          >
+
+
+            <!-- TOP STATUS -->
+
+            <div
+              class="camera-live-status"
+              id="cameraLiveStatus"
+            >
+
+              <div class="live-analysis">
+                AI OBJECT DETECTION ACTIVE
+              </div>
+
+
+              <div
+                class="distance-status"
+                id="distanceStatus"
+              >
+                Waiting...
+              </div>
+
+            </div>
+
+
+            <!-- DIRECTION -->
+
+            <div
+              class="direction-arrow"
+              id="directionArrow"
+            >
+
+              <i data-lucide="arrow-up"></i>
+
+            </div>
+
+
+            <!-- CONTROLS -->
+
+            <div
+              class="camera-controls"
+              id="cameraControls"
+            >
+
+              <button
+                class="camera-control-btn"
+                type="button"
+                aria-label="Voice guidance"
+                onclick="announceGuidance()"
+              >
+
+                <i data-lucide="volume-2"></i>
+
+              </button>
+
+
+              <button
+                class="camera-control-btn main"
+                type="button"
+                aria-label="Pause guidance"
+                onclick="toggleGuidance()"
+                id="guidanceToggle"
+              >
+
+                <i data-lucide="pause"></i>
+
+              </button>
+
+
+              <button
+                class="camera-control-btn"
+                type="button"
+                aria-label="Stop camera"
+                onclick="stopCamera()"
+              >
+
+                <i data-lucide="camera-off"></i>
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           RIGHT PANEL
+      ================================================== -->
+
+      <div class="right-panel">
+
+
+        <!-- AI STATUS -->
+
+        <div class="ai-status-card">
+
+          <div class="ai-status-label" id="aiStatusLabel">
+            AI Navigation Status
+          </div>
+
+
+          <h2 id="aiStatusTitle">
+            Loading Vision AI
+          </h2>
+
+
+          <p id="aiStatusDescription">
+            Loading the browser-based object detection model.
+          </p>
+
+
+          <div class="ai-status-indicator">
+
+            <span></span>
+
+            <label id="aiIndicatorText">
+              AI model loading...
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- OBSTACLE -->
+
+        <div class="obstacle-card">
+
+          <div class="section-heading" id="obstacleSectionTitle">
+
+            <div class="section-heading-icon">
+
+              <i data-lucide="scan"></i>
+
+            </div>
+
+            Object & Obstacle Detection
+
+          </div>
+
+
+          <div
+            class="obstacle-status"
+            id="obstacleStatus"
+          >
+
+            <div class="obstacle-status-icon">
+
+              <i data-lucide="shield-check"></i>
+
+            </div>
+
+
+            <div>
+
+              <strong id="obstacleTitle">
+                AI model loading
+              </strong>
+
+
+              <span id="obstacleDescription">
+                Please wait while Vision AI starts.
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="detection-summary"
+            id="detectionSummary"
+          ></div>
+
+        </div>
+
+
+        <!-- GUIDANCE STEPS -->
+
+        <div class="guidance-card">
+
+          <div class="guidance-title" id="guidanceTitle">
+            Current Guidance
+          </div>
+
+
+          <div class="guidance-step">
+
+            <div class="step-number">
+              01
+            </div>
+
+
+            <div>
+
+              <strong id="stepOne">
+                Select destination
+              </strong>
+
+              <span id="stepOneText">
+                Choose a Sathyabama campus location
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="guidance-step">
+
+            <div class="step-number">
+              02
+            </div>
+
+
+            <div>
+
+              <strong id="stepTwo">
+                Start camera guidance
+              </strong>
+
+              <span id="stepTwoText">
+                Enable visual environment analysis
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="guidance-step">
+
+            <div class="step-number">
+              03
+            </div>
+
+
+            <div>
+
+              <strong id="stepThree">
+                Follow voice instructions
+              </strong>
+
+              <span id="stepThreeText">
+                Receive spoken movement guidance
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="guidance-step">
+
+            <div class="step-number">
+              04
+            </div>
+
+
+            <div>
+
+              <strong id="stepFour">
+                Watch for obstacles
+              </strong>
+
+              <span id="stepFourText">
+                Vision AI warns about detected objects
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- VOICE -->
+
+        <button
+          class="voice-guidance-btn"
+          type="button"
+          onclick="announceGuidance()"
+        >
+
+          <i data-lucide="volume-2"></i>
+
+          <span id="announceGuidanceText">Announce Guidance</span>
+
+        </button>
+
+
+        <!-- GPS -->
+
+        <div class="gps-card">
+
+          <div class="gps-card-icon">
+
+            <i data-lucide="navigation"></i>
+
+          </div>
+
+
+          <div>
+
+            <h3 id="gpsPositionTitle">
+              Current GPS Position
+            </h3>
+
+
+            <p id="coordinates">
+              Detecting your current location...
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       FLOATING SOS
+  ====================================================== -->
+
+  <!-- =====================================================
+       MOBILE BOTTOM NAVIGATION
+  ====================================================== -->
+
+  <nav
+    class="mobile-bottom-nav"
+    aria-label="Mobile navigation"
+  >
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="AI Voice Assistant"
+      onclick="window.location.href='index.html'"
+    >
+
+      <i data-lucide="bot"></i>
+
+      <span>
+        Voice
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item active"
+      type="button"
+      aria-label="Visual AI Guidance"
+      aria-current="page"
+    >
+
+      <i data-lucide="eye"></i>
+
+      <span>
+        Visual
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Wheelchair Access Routes"
+      onclick="window.location.href='wheelchair.html'"
+    >
+
+      <i data-lucide="accessibility"></i>
+
+      <span>
+        Wheelchair
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item"
+      type="button"
+      aria-label="Campus Shuttle Live"
+      onclick="window.location.href='shuttle.html'"
+    >
+
+      <i data-lucide="bus"></i>
+
+      <span>
+        Shuttle
+      </span>
+
+    </button>
+
+    <button
+      class="mobile-nav-item sos-item"
+      type="button"
+      aria-label="Emergency SOS"
+      onclick="triggerSOS()"
+    >
+
+      <i data-lucide="alert-triangle"></i>
+
+      <span>
+        SOS
+      </span>
+
+    </button>
+
+  </nav>
+
+
+  <!-- =====================================================
+       MESSAGE
+  ====================================================== -->
+
+  <div
+    class="message-box"
+    id="messageBox"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script>
+
+    /* =====================================================
+       LUCIDE
+    ====================================================== */
+
+    lucide.createIcons();
+
+
+    /* =====================================================
+       GLOBAL STATE
+    ====================================================== */
+
+    let cameraStream = null;
+
+    let cameraRunning = false;
+
+    let guidanceRunning = false;
+
+    let guidanceInterval = null;
+
+    let currentLatitude = null;
+
+    let currentLongitude = null;
+
+    let selectedDestination = "";
+
+    let currentLanguage = "en-IN";
+
+    const languageTranslations = {
+      "en-IN": {
+        pageTitlePrefix: "Visual",
+        pageTitleHighlight: "AI Guidance",
+        pageDescription: "Use your camera to receive real-time AI-assisted visual and voice guidance while travelling through Sathyabama Institute of Science and Technology. AccessPathAI detects supported objects and warns when an object appears near the likely walking path.",
+        aiReady: "VISION AI READY",
+        destinationLabel: "SELECT DESTINATION",
+        destinationHint: "Choose a campus destination",
+        cameraStart: "Enable Camera",
+        cameraPlaceholderTitle: "Start Visual Guidance",
+        cameraPlaceholderText: "Enable your camera so AccessPathAI can use browser-based Vision AI to detect supported objects, people and vehicles and provide voice-friendly safety warnings.",
+        aiStatusLabel: "AI Navigation Status",
+        aiStatusLoading: "Loading Vision AI",
+        aiStatusLoadingText: "Loading the browser-based object detection model.",
+        aiIndicator: "AI model loading...",
+        obstacleSection: "Object & Obstacle Detection",
+        obstacleTitle: "AI model loading",
+        obstacleDescription: "Please wait while Vision AI starts.",
+        guidanceTitle: "Current Guidance",
+        steps: [
+          { title: "Select destination", text: "Choose a Sathyabama campus location" },
+          { title: "Start camera guidance", text: "Enable visual environment analysis" },
+          { title: "Follow voice instructions", text: "Receive spoken movement guidance" },
+          { title: "Watch for obstacles", text: "Vision AI warns about detected objects" }
+        ],
+        announceGuidance: "Announce Guidance",
+        startGuidance: "Start AI Guidance",
+        gpsTitle: "Current GPS Position",
+        languageChanged: "Language changed.",
+        selectDestinationMessage: "Please select a destination first.",
+        guidancePaused: "AI guidance paused.",
+        guidanceResumed: "AI guidance resumed.",
+        emergencySos: "Emergency SOS activated.",
+        guidanceAnnounced: "Guidance announced.",
+        areaGuidance: "You are using AccessPathAI visual guidance.",
+        destinationText: "Your destination is",
+        gpsActive: "GPS is active.",
+        startCameraText: "Start the camera to activate visual analysis.",
+        pathWarning: "The system will warn you when supported objects appear near the likely walking path. Continue carefully."
+      },
+      "ta-IN": {
+        pageTitlePrefix: "காட்சி",
+        pageTitleHighlight: "AI வழிகாட்டி",
+        pageDescription: "உங்கள் கேமராவைப் பயன்படுத்தி சத்யாபாமா இன்ஸ்டிடியூட் ஆப் சயின்ஸ் அண்ட் டெக்னாலஜியில் நிகழ்நேர AI வழிகாட்டுதலைப் பெறுங்கள். AccessPathAI ஆதரிக்கப்படும் பொருள்களை கண்டறிந்து, பாதை அருகே பொருள் தோன்றும்போது எச்சரிக்கிறது.",
+        aiReady: "VISION AI தயாராக உள்ளது",
+        destinationLabel: "இலக்கைத் தேர்ந்தெடுக்கவும்",
+        destinationHint: "கேம்பஸ் இலக்கை தேர்ந்தெடுக்கவும்",
+        cameraStart: "கேமராவை செயல்படுத்து",
+        cameraPlaceholderTitle: "காட்சிப் பயணத்தைத் தொடங்குங்கள்",
+        cameraPlaceholderText: "உங்கள் கேமராவை செயல்படுத்தி, AccessPathAI ஆனது பொருள்கள், மக்கள் மற்றும் வாகனங்களை கண்டறிந்து, குரல் வழிகாட்டுதலை வழங்கும்.",
+        aiStatusLabel: "AI வழிகாட்டல் நிலை",
+        aiStatusLoading: "Vision AI ஏற்றப்படுகிறது",
+        aiStatusLoadingText: "நிகழ்நேர பொருள் கண்டறிதல் மாதிரி ஏற்றப்படுகிறது.",
+        aiIndicator: "AI மாதிரி ஏற்றப்படுகிறது...",
+        obstacleSection: "பொருள் & தடையைக் கண்டறிதல்",
+        obstacleTitle: "AI மாதிரி ஏற்றப்படுகிறது",
+        obstacleDescription: "Vision AI தொடங்குவதற்கு காத்திருங்கள்.",
+        guidanceTitle: "தற்போதைய வழிகாட்டல்",
+        steps: [
+          { title: "இலக்கைத் தேர்ந்தெடுக்கவும்", text: "சத்யாபாமா கேம்பஸ் இடத்தைத் தேர்ந்தெடுக்கவும்" },
+          { title: "கேமரா வழிகாட்டலைத் தொடங்கவும்", text: "காட்சி சூழலை பகுப்பாய்வு செய்யவும்" },
+          { title: "குரல் வழிமுறைகளைப் பின்பற்றவும்", text: "குரல் நகர்வு வழிகாட்டலைப் பெறவும்" },
+          { title: "தடைகளைப் பார்க்கவும்", text: "Vision AI கண்டறிந்த பொருள்களை எச்சரிக்கிறது" }
+        ],
+        announceGuidance: "வழிகாட்டலை அறிவியுங்கள்",
+        startGuidance: "AI வழிகாட்டலைத் தொடங்கவும்",
+        gpsTitle: "தற்போதைய GPS நிலை",
+        languageChanged: "மொழி மாற்றப்பட்டது.",
+        selectDestinationMessage: "முதலில் இலக்கைத் தேர்ந்தெடுக்கவும்.",
+        guidancePaused: "AI வழிகாட்டல் இடைநிறுத்தப்பட்டது.",
+        guidanceResumed: "AI வழிகாட்டல் தொடர்கிறது.",
+        emergencySos: "அவசர SOS செயல்படுத்தப்பட்டது.",
+        guidanceAnnounced: "வழிகாட்டல் அறிவிக்கப்பட்டது.",
+        areaGuidance: "நீங்கள் AccessPathAI காட்சி வழிகாட்டலைப் பயன்படுத்துகிறீர்கள்.",
+        destinationText: "உங்கள் இலக்கு",
+        gpsActive: "GPS செயலில் உள்ளது.",
+        startCameraText: "காட்சித் திறன் செயல்படுத்த கேமராவைத் தொடங்கவும்.",
+        pathWarning: "ஆதரிக்கப்படும் பொருள்கள் உங்கள் நடைபாதைக்கு அருகில் தோன்றும் போது அமைப்பு உங்களுக்கு எச்சரிக்கும். கவனமாக தொடரவும்."
+      },
+      "hi-IN": {
+        pageTitlePrefix: "दृश्य",
+        pageTitleHighlight: "AI मार्गदर्शन",
+        pageDescription: "अपने कैमरे का उपयोग करके Sathyabama Institute of Science and Technology में वास्तविक समय AI-असिस्टेड दृश्य और आवाज मार्गदर्शन प्राप्त करें। AccessPathAI समर्थित वस्तुओं का पता लगाता है और रास्ते के पास होने पर चेतावनी देता है।",
+        aiReady: "VISION AI तैयार",
+        destinationLabel: "गंतव्य चुनें",
+        destinationHint: "कैम्पस गंतव्य चुनें",
+        cameraStart: "कैमरा सक्षम करें",
+        cameraPlaceholderTitle: "दृश्य मार्गदर्शन शुरू करें",
+        cameraPlaceholderText: "अपना कैमरा सक्षम करें ताकि AccessPathAI वस्तुओं, लोगों और वाहनों का पता लगाकर आवाज़ मार्गदर्शन दे सके।",
+        aiStatusLabel: "AI नेविगेशन स्थिति",
+        aiStatusLoading: "Vision AI लोड हो रहा है",
+        aiStatusLoadingText: "रियल-टाइम ऑब्जेक्ट डिटेक्शन मॉडल लोड हो रहा है।",
+        aiIndicator: "AI मॉडल लोड हो रहा है...",
+        obstacleSection: "ऑब्जेक्ट और अवरोध पता लगाना",
+        obstacleTitle: "AI मॉडल लोड हो रहा है",
+        obstacleDescription: "Vision AI शुरू होने की प्रतीक्षा करें।",
+        guidanceTitle: "वर्तमान मार्गदर्शन",
+        steps: [
+          { title: "गंतव्य चुनें", text: "Sathyabama कैम्पस स्थान चुनें" },
+          { title: "कैमरा मार्गदर्शन शुरू करें", text: "दृश्य वातावरण का विश्लेषण शुरू करें" },
+          { title: "आवाज़ निर्देशों का पालन करें", text: "आवाज़ मार्गदर्शन प्राप्त करें" },
+          { title: "अवरोधों पर ध्यान दें", text: "Vision AI पाए गए वस्तुओं के बारे में चेतावनी देता है" }
+        ],
+        announceGuidance: "मार्गदर्शन घोषित करें",
+        startGuidance: "AI मार्गदर्शन शुरू करें",
+        gpsTitle: "वर्तमान GPS स्थिति",
+        languageChanged: "भाषा बदल गई।",
+        selectDestinationMessage: "कृपया पहले गंतव्य चुनें।",
+        guidancePaused: "AI मार्गदर्शन रुका हुआ है।",
+        guidanceResumed: "AI मार्गदर्शन फिर से शुरू हुआ।",
+        emergencySos: "आपातकालीन SOS सक्रिय है।",
+        guidanceAnnounced: "मार्गदर्शन घोषित किया गया।",
+        areaGuidance: "आप AccessPathAI दृश्य मार्गदर्शन का उपयोग कर रहे हैं।",
+        destinationText: "आपका गंतव्य",
+        gpsActive: "GPS सक्रिय है।",
+        startCameraText: "दृश्य विश्लेषण शुरू करने के लिए कैमरा चालू करें।",
+        pathWarning: "सिस्टम आपको तब चेतावनी देगा जब समर्थित वस्तुएँ संभावित चलने वाले रास्ते के पास दिखाई देंगी। सावधानी से आगे बढ़ें।"
+      },
+      "te-IN": {
+        pageTitlePrefix: "విజువల్",
+        pageTitleHighlight: "AI మార్గదర్శనం",
+        pageDescription: "మీ కెమెరాను ఉపయోగించి Sathyabama Institute of Science and Technologyలో నిజసమయ AI సహాయక దర్శన మరియు వాయిస్ మార్గదర్శనను పొందండి. AccessPathAI మద్దతు ఇచ్చే వస్తువులను గుర్తించి, మార్గం దగ్గర వస్తువులు వచ్చినప్పుడు హెచ్చరిస్తుంది.",
+        aiReady: "VISION AI సిద్ధంగా ఉంది",
+        destinationLabel: "గమ్యస్థానాన్ని ఎంచుకోండి",
+        destinationHint: "క్యాంపస్ గమ్యస్థానాన్ని ఎంచుకోండి",
+        cameraStart: "కెమెరాను ప్రారంభించండి",
+        cameraPlaceholderTitle: "విజువల్ మార్గదర్శన ప్రారంభించండి",
+        cameraPlaceholderText: "మీ కెమెరాను ప్రారంభించి, AccessPathAI వస్తువులు, ప్రజలు మరియు వాహనాలను గుర్తించి, వాయిస్ మార్గదర్శనను అందిస్తుంది.",
+        aiStatusLabel: "AI నావిగేషన్ స్థితి",
+        aiStatusLoading: "Vision AI లోడ్ అవుతోంది",
+        aiStatusLoadingText: "నిజసమయ వస్తువు గుర్తింపు మోడల్ లోడ్ అవుతోంది.",
+        aiIndicator: "AI మోడల్ లోడ్ అవుతోంది...",
+        obstacleSection: "వస్తువు & అడ్డువలైతను గుర్తించడం",
+        obstacleTitle: "AI మోడల్ లోడ్ అవుతోంది",
+        obstacleDescription: "Vision AI ప్రారంభమవడానికి వేచి ఉండండి.",
+        guidanceTitle: "ప్రస్తుత మార్గదర్శనం",
+        steps: [
+          { title: "గమ్యస్థానాన్ని ఎంచుకోండి", text: "Sathyabama క్యాంపస్ స్థలాన్ని ఎంచుకోండి" },
+          { title: "కెమెరా మార్గదర్శనను ప్రారంభించండి", text: "విజువల్ వాతావరణాన్ని విశ్లేషించండి" },
+          { title: "వాయిస్ సూచనలను అనుసరించండి", text: "వాయిస్ చలనం మార్గదర్శనను పొందండి" },
+          { title: "అడ్డువలైతలను గమనించండి", text: "Vision AI గుర్తించిన వస్తువులను హెచ్చరిస్తుంది" }
+        ],
+        announceGuidance: "మార్గదర్శనను ప్రకటించండి",
+        startGuidance: "AI మార్గదర్శనను ప్రారంభించండి",
+        gpsTitle: "ప్రస్తుత GPS స్థితి",
+        languageChanged: "భాష మార్చబడింది.",
+        selectDestinationMessage: "ముందుగా గమ్యస్థానాన్ని ఎంచుకోండి.",
+        guidancePaused: "AI మార్గదర్శనం పాజ్ అయ్యింది.",
+        guidanceResumed: "AI మార్గదర్శనం తిరిగి ప్రారంభమైంది.",
+        emergencySos: "అత్యవసర SOS ప్రారంభమైంది.",
+        guidanceAnnounced: "మార్గదర్శనం ప్రకటించబడింది.",
+        areaGuidance: "మీరు AccessPathAI విజువల్ మార్గదర్శనను ఉపయోగిస్తున్నారు.",
+        destinationText: "మీ గమ్యస్థానం",
+        gpsActive: "GPS క్రియాశీలంగా ఉంది.",
+        startCameraText: "విజువల్ విశ్లేషణను ప్రారంభించడానికి కెమెరాను ప్రారంభించండి.",
+        pathWarning: "మద్దతు ఇచ్చే వస్తువులు సాధారణ నడక మార్గానికి దగ్గరగా ఉంటే సిస్టమ్ మీకు హెచ్చరికను అందిస్తుంది. జాగ్రత్తగా కొనసాగండి."
+      },
+      "kn-IN": {
+        pageTitlePrefix: "ವಿಷುಯಲ್",
+        pageTitleHighlight: "AI ಮಾರ್ಗದರ್ಶನ",
+        pageDescription: "ನಿಮ್ಮ ಕ್ಯಾಮರಾವನ್ನು ಬಳಸಿಕೊಂಡು Sathyabama Institute of Science and Technologyದಲ್ಲಿ ನೈಜ ಸಮಯದ AI-ಸಹಾಯದ ದೃಶ್ಯ ಮತ್ತು ಧ್ವನಿ ಮಾರ್ಗದರ್ಶನವನ್ನು ಪಡೆಯಿರಿ. AccessPathAI ಬೆಂಬಲಿತ ವಸ್ತುಗಳನ್ನು ಪತ್ತೆಹಚ್ಚಿ, ಮಾರ್ಗದ ಹತ್ತಿರ ವಸ್ತು ಕಾಣಿಸಿದಾಗ ಎಚ್ಚರಿಸುತ್ತದೆ.",
+        aiReady: "VISION AI ಸಿದ್ಧ",
+        destinationLabel: "ಗಮ್ಯಸ್ಥಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+        destinationHint: "ಕ್ಯಾಂಪಸ್ ಗಮ್ಯಸ್ಥಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+        cameraStart: "ಕ್ಯಾಮರಾವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ",
+        cameraPlaceholderTitle: "ವಿಷುಯಲ್ ಮಾರ್ಗದರ್ಶನವನ್ನು ಪ್ರಾರಂಭಿಸಿ",
+        cameraPlaceholderText: "ನಿಮ್ಮ ಕ್ಯಾಮರಾವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ, AccessPathAI ವಸ್ತುಗಳು, ಜನರು ಮತ್ತು ವಾಹನಗಳನ್ನು ಪತ್ತೆಹಚ್ಚಿ ಧ್ವನಿ ಮಾರ್ಗದರ್ಶನ ನೀಡುತ್ತದೆ.",
+        aiStatusLabel: "AI ನ್ಯಾವಿಗೇಷನ್ ಸ್ಥಿತಿ",
+        aiStatusLoading: "Vision AI ಲೋಡ್ ಆಗುತ್ತಿದೆ",
+        aiStatusLoadingText: "ನೈಜ ಸಮಯದ ವಸ್ತು ಪತ್ತೆ ಮಾದರಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ.",
+        aiIndicator: "AI ಮಾದರಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+        obstacleSection: "ವಸ್ತು & ಅಡಚಣೆಯನ್ನು ಪತ್ತೆಹಚ್ಚು",
+        obstacleTitle: "AI ಮಾದರಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ",
+        obstacleDescription: "Vision AI ಪ್ರಾರಂಭವಾಗುವವರೆಗೆ ಕಾಯಿರಿ.",
+        guidanceTitle: "ಪ್ರಸ್ತುತ ಮಾರ್ಗದರ್ಶನ",
+        steps: [
+          { title: "ಗಮ್ಯಸ್ಥಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ", text: "Sathyabama ಕ್ಯಾಂಪಸ್ ಸ್ಥಳವನ್ನು ಆಯ್ಕೆಮಾಡಿ" },
+          { title: "ಕ್ಯಾಮರಾ ಮಾರ್ಗದರ್ಶನ ಪ್ರಾರಂಭಿಸಿ", text: "ದೃಶ್ಯ ಪರಿಸರವನ್ನು ವಿಶ್ಲೇಷಿಸಿ" },
+          { title: "ಧ್ವನಿ ಸೂಚನೆಗಳನ್ನು ಅನುಸರಿಸಿ", text: "ಧ್ವನಿ ಚಲನೆ ಮಾರ್ಗದರ್ಶನವನ್ನು ಪಡೆಯಿರಿ" },
+          { title: "ಅಡಚಣೆಗಳನ್ನು ಗಮನಿಸಿ", text: "Vision AI ಪತ್ತೆಹಚ್ಚಿದ ವಸ್ತುಗಳ ಬಗ್ಗೆ ಎಚ್ಚರಿಸುತ್ತದೆ" }
+        ],
+        announceGuidance: "ಮಾರ್ಗದರ್ಶನವನ್ನು ಪ್ರಕಟಿಸಿ",
+        startGuidance: "AI ಮಾರ್ಗದರ್ಶನವನ್ನು ಪ್ರಾರಂಭಿಸಿ",
+        gpsTitle: "ಪ್ರಸ್ತುತ GPS ಸ್ಥಿತಿ",
+        languageChanged: "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗಿದೆ.",
+        selectDestinationMessage: "ಮೊದಲು ಗಮ್ಯಸ್ಥಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+        guidancePaused: "AI ಮಾರ್ಗದರ್ಶನ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ.",
+        guidanceResumed: "AI ಮಾರ್ಗದರ್ಶನ ಪುನರಾರಂಭವಾಯಿತು.",
+        emergencySos: "ಅಪಾಯಕಾರಿಯಾದ SOS ಸಕ್ರಿಯಗೊಂಡಿದೆ.",
+        guidanceAnnounced: "ಮಾರ್ಗದರ್ಶನ ಪ್ರಕಟಿಸಲಾಗಿದೆ.",
+        areaGuidance: "ನೀವು AccessPathAI ವಿಷುಯಲ್ ಮಾರ್ಗದರ್ಶನವನ್ನು ಬಳಸುತ್ತಿದ್ದೀರಿ.",
+        destinationText: "ನಿಮ್ಮ ಗಮ್ಯಸ್ಥಾನ",
+        gpsActive: "GPS ಸಕ್ರಿಯವಾಗಿದೆ.",
+        startCameraText: "ವಿಷುಯಲ್ ವಿಶ್ಲೇಷಣೆಯನ್ನು ಪ್ರಾರಂಭಿಸಲು ಕ್ಯಾಮರಾವನ್ನು ಪ್ರಾರಂಭಿಸಿ.",
+        pathWarning: "ಬೆಂಬಲಿತ ವಸ್ತುಗಳು ಸಂಭವನೀಯ ನಡೆಯುವ ಮಾರ್ಗದ ಹತ್ತಿರ ಕಾಣಿಸಿದಾಗ ಸಿಸ್ಟಂ ನಿಮಗೆ ಎಚ್ಚರಿಸುತ್ತದೆ. ಜಾಗರೂಕವಾಗಿ ಮುಂದುವರಿಯಿರಿ."
+      },
+      "ml-IN": {
+        pageTitlePrefix: "വിഷ്വൽ",
+        pageTitleHighlight: "AI മാർഗ്ഗനിർദ്ദേശം",
+        pageDescription: "നിങ്ങളുടെ ക്യാമറ ഉപയോഗിച്ച് Sathyabama Institute of Science and Technologyയിൽ റിയൽ-ടൈം AI-സഹായം ഉള്ള വിഷ്വൽ, വോയിസ് മാർഗ്ഗനിർദ്ദേശം സ്വീകരിക്കുക. AccessPathAI പിന്തുണയ്ക്കുന്ന വസ്തുക്കളെ കണ്ടെത്തുകയും പാതയ്ക്ക് സമീപം വസ്തു വന്നാൽ മുന്നറിയിപ്പ് നൽകും.",
+        aiReady: "VISION AI തയ്യാറാണ്",
+        destinationLabel: "ലക്ഷ്യസ്ഥാനം തിരഞ്ഞെടുക്കുക",
+        destinationHint: "ക്യാമ്പസ് ലക്ഷ്യസ്ഥാനം തിരഞ്ഞെടുക്കുക",
+        cameraStart: "ക്യാമറ പ്രവർത്തിപ്പിക്കുക",
+        cameraPlaceholderTitle: "വിഷ്വൽ മാർഗ്ഗനിർദ്ദേശം ആരംഭിക്കൂ",
+        cameraPlaceholderText: "നിങ്ങളുടെ ക്യാമറ ഓൺ ചെയ്ത ശേഷം, AccessPathAI വസ്തുക്കളെ, ആളുകളെയും വാഹനങ്ങളെയും കണ്ടെത്തി വോയിസ് മാർഗ്ഗനിർദ്ദേശം നൽകും.",
+        aiStatusLabel: "AI നാവിഗേഷൻ നില",
+        aiStatusLoading: "Vision AI ലോഡുചെയ്യുന്നു",
+        aiStatusLoadingText: "റിയൽ-ടൈം ഒബ്‌ജക്റ്റ് ഡിറ്റക്ഷൻ മോഡൽ ലോഡുചെയ്യുന്നു.",
+        aiIndicator: "AI മോഡൽ ലോഡുചെയ്യുന്നു...",
+        obstacleSection: "വസ്തു & തടസ്സം കണ്ടെത്തൽ",
+        obstacleTitle: "AI മോഡൽ ലോഡുചെയ്യുന്നു",
+        obstacleDescription: "Vision AI ആരംഭിക്കുന്നതിന് കാത്തിരിക്കുക.",
+        guidanceTitle: "നിലവിലെ മാർഗ്ഗനിർദ്ദേശം",
+        steps: [
+          { title: "ലക്ഷ്യസ്ഥാനം തിരഞ്ഞെടുക്കുക", text: "Sathyabama ക്യാമ്പസ് സ്ഥലം തിരഞ്ഞെടുക്കുക" },
+          { title: "ക്യാമറ മാർഗ്ഗനിർദ്ദേശം ആരംഭിക്കുക", text: "വിഷ്വൽ അന്തരീക്ഷം വിശകലനം ചെയ്യുക" },
+          { title: "വോയിസ് നിർദ്ദേശങ്ങൾ പാലിക്കുക", text: "വോയിസ് ചലനം മാർഗ്ഗനിർദ്ദേശം ലഭിക്കുക" },
+          { title: "തടസ്സങ്ങളിലേക്ക് ശ്രദ്ധിക്കുക", text: "Vision AI കണ്ടെത്തിയ വസ്തുക്കളെ മുന്നറിയിപ്പ് നൽകും" }
+        ],
+        announceGuidance: "മാർഗ്ഗനിർദ്ദേശം അറിയിക്കുക",
+        startGuidance: "AI മാർഗ്ഗനിർദ്ദേശം ആരംഭിക്കുക",
+        gpsTitle: "നിലവിലെ GPS സ്ഥിതി",
+        languageChanged: "ഭാഷ മാറ്റി.",
+        selectDestinationMessage: "ദയവായി ആദ്യം ലക്ഷ്യസ്ഥാനം തിരഞ്ഞെടുക്കുക.",
+        guidancePaused: "AI മാർഗ്ഗനിർദ്ദേശം താൽക്കാലികമായി നിർത്തിവച്ചു.",
+        guidanceResumed: "AI മാർഗ്ഗനിർദ്ദേശം വീണ്ടും ആരംഭിച്ചു.",
+        emergencySos: "അടിയന്തിര SOS സജീവമാക്കി.",
+        guidanceAnnounced: "മാർഗ്ഗനിർദ്ദേശം അറിയിക്കപ്പെട്ടു.",
+        areaGuidance: "നിങ്ങൾ AccessPathAI വിഷ്വൽ മാർഗ്ഗനിർദ്ദേശം ഉപയോഗിക്കുന്നു.",
+        destinationText: "നിങ്ങളുടെ ലക്ഷ്യസ്ഥാനം",
+        gpsActive: "GPS സജീവമാണ്.",
+        startCameraText: "വിഷ്വൽ വിശകലനം ആരംഭിക്കാൻ ക്യാമറ ആരംഭിക്കുക.",
+        pathWarning: "സപ്പോർട്ടുചെയ്യുന്ന വസ്തുക്കൾ സാന്ദർഭികമായി നടപ്പിക്കുന്ന പാതയ്ക്ക് സമീപം വന്നാൽ സിസ്റ്റം നിങ്ങളെ മുന്നറിയിപ്പ് നൽകും. ജാഗ്രതയോടെ തുടരുക."
+      }
+    };
+
+    const sidebarTranslations = {
+      "en-IN": {
+        voiceAssistant: "AI Voice Assistant",
+        visualAi: "Visual AI Guidance",
+        wheelchair: "Wheelchair Access Routes",
+        shuttle: "Campus Shuttle Live",
+        sos: "EMERGENCY SOS",
+        mobileVoice: "Voice",
+        mobileVisual: "Visual",
+        mobileWheelchair: "Wheelchair",
+        mobileShuttle: "Shuttle",
+        mobileSos: "SOS"
+      },
+      "ta-IN": {
+        voiceAssistant: "AI குரல் உதவியாளர்",
+        visualAi: "விஷுவல் AI வழிகாட்டல்",
+        wheelchair: "சக்கர நாற்காலி அணுகல் வழிகள்",
+        shuttle: "கேம்பஸ் ஷட்டில் நேரடி",
+        sos: "அவசர SOS",
+        mobileVoice: "குரல்",
+        mobileVisual: "காட்சி",
+        mobileWheelchair: "சக்கரம்",
+        mobileShuttle: "ஷட்டில்",
+        mobileSos: "SOS"
+      },
+      "hi-IN": {
+        voiceAssistant: "एआई वॉइस असिस्टेंट",
+        visualAi: "विज़ुअल AI मार्गदर्शन",
+        wheelchair: "व्हीलचेयर एक्सेस रूट्स",
+        shuttle: "कैम्पस शटल लाइव",
+        sos: "आपातकालीन SOS",
+        mobileVoice: "वॉइस",
+        mobileVisual: "विज़ुअल",
+        mobileWheelchair: "व्हीलचेयर",
+        mobileShuttle: "शटल",
+        mobileSos: "SOS"
+      },
+      "te-IN": {
+        voiceAssistant: "AI వాయిస్ అసిస్టెంట్",
+        visualAi: "విజువల్ AI మార్గదర్శన",
+        wheelchair: "వీల్చైర్ యాక్సెస్ మార్గాలు",
+        shuttle: "క్యాంపస్ షటిల్ లైవ్",
+        sos: "అత్యవసర SOS",
+        mobileVoice: "వాయిస్",
+        mobileVisual: "విజువల్",
+        mobileWheelchair: "వీల్చైర్",
+        mobileShuttle: "షటిల్",
+        mobileSos: "SOS"
+      },
+      "kn-IN": {
+        voiceAssistant: "AI ಧ್ವನಿ ಸಹಾಯಕ",
+        visualAi: "ವಿಷುವಲ್ AI ಮಾರ್ಗದರ್ಶನ",
+        wheelchair: "ವೀಲ್‌ಚೇರ್ ಪ್ರವೇಶ ಮಾರ್ಗಗಳು",
+        shuttle: "ಕ್ಯಾಂಪಸ್ ಶಟ್ಲ್ ಲೈವ್",
+        sos: "ತುರ್ತು SOS",
+        mobileVoice: "ಧ್ವನಿ",
+        mobileVisual: "ವಿಷುಯಲ್",
+        mobileWheelchair: "ವೀಲ್‌ಚೇರ್",
+        mobileShuttle: "ಶಟ್ಲ್",
+        mobileSos: "SOS"
+      },
+      "ml-IN": {
+        voiceAssistant: "AI വോയ്‌സ് അസിസ്റ്റന്റ്",
+        visualAi: "വിഷ്വൽ AI മാർഗ്ഗനിർദ്ദേശം",
+        wheelchair: "വിഐൽചെയർ ആക്സസ് റൂട്ടുകൾ",
+        shuttle: "കാമ്പസ് ഷട്ടിൽ ലൈവ്",
+        sos: "അടിയന്തര SOS",
+        mobileVoice: "വോയിസ്",
+        mobileVisual: "വിഷ്വൽ",
+        mobileWheelchair: "വീൽചെയർ",
+        mobileShuttle: "ഷട്ടിൽ",
+        mobileSos: "SOS"
+      }
+    };
+
+    function getLocalizedText(key) {
+      const locale = languageTranslations[currentLanguage] || languageTranslations["en-IN"];
+      return locale[key] || languageTranslations["en-IN"][key] || "";
+    }
+
+    function getLocalizedSidebarText(key) {
+      const locale = sidebarTranslations[currentLanguage] || sidebarTranslations["en-IN"];
+      return locale[key] || sidebarTranslations["en-IN"][key] || "";
+    }
+
+    function applyLanguageUI() {
+      const locale = languageTranslations[currentLanguage] || languageTranslations["en-IN"];
+
+      const pageTitle = document.getElementById("pageTitleText");
+      if (pageTitle) {
+        pageTitle.innerHTML = `${locale.pageTitlePrefix} <span>${locale.pageTitleHighlight}</span>`;
+      }
+
+      const pageDescription = document.getElementById("pageDescriptionText");
+      if (pageDescription) {
+        pageDescription.textContent = locale.pageDescription;
+      }
+
+      const aiReadyText = document.getElementById("aiReadyText");
+      if (aiReadyText) {
+        aiReadyText.textContent = locale.aiReady;
+      }
+
+      const destinationLabel = document.getElementById("destinationLabel");
+      if (destinationLabel) {
+        destinationLabel.textContent = locale.destinationLabel;
+      }
+
+      const cameraStartText = document.getElementById("cameraStartText");
+      if (cameraStartText) {
+        cameraStartText.textContent = locale.cameraStart;
+      }
+
+      const cameraTitle = document.getElementById("cameraPlaceholderTitle");
+      if (cameraTitle) {
+        cameraTitle.textContent = locale.cameraPlaceholderTitle;
+      }
+
+      const cameraText = document.getElementById("cameraPlaceholderText");
+      if (cameraText) {
+        cameraText.textContent = locale.cameraPlaceholderText;
+      }
+
+      const aiStatusLabel = document.getElementById("aiStatusLabel");
+      if (aiStatusLabel) {
+        aiStatusLabel.textContent = locale.aiStatusLabel;
+      }
+
+      const obstacleTitle = document.getElementById("obstacleSectionTitle");
+      if (obstacleTitle) {
+        obstacleTitle.childNodes[obstacleTitle.childNodes.length - 1].textContent = locale.obstacleSection;
+      }
+
+      const guidanceTitle = document.getElementById("guidanceTitle");
+      if (guidanceTitle) {
+        guidanceTitle.textContent = locale.guidanceTitle;
+      }
+
+      const stepOne = document.getElementById("stepOne");
+      const stepOneText = document.getElementById("stepOneText");
+      if (stepOne) stepOne.textContent = locale.steps[0].title;
+      if (stepOneText) stepOneText.textContent = locale.steps[0].text;
+
+      const stepTwo = document.getElementById("stepTwo");
+      const stepTwoText = document.getElementById("stepTwoText");
+      if (stepTwo) stepTwo.textContent = locale.steps[1].title;
+      if (stepTwoText) stepTwoText.textContent = locale.steps[1].text;
+
+      const stepThree = document.getElementById("stepThree");
+      const stepThreeText = document.getElementById("stepThreeText");
+      if (stepThree) stepThree.textContent = locale.steps[2].title;
+      if (stepThreeText) stepThreeText.textContent = locale.steps[2].text;
+
+      const stepFour = document.getElementById("stepFour");
+      const stepFourText = document.getElementById("stepFourText");
+      if (stepFour) stepFour.textContent = locale.steps[3].title;
+      if (stepFourText) stepFourText.textContent = locale.steps[3].text;
+
+      const startGuidanceBtnText = document.getElementById("startGuidanceBtnText");
+      if (startGuidanceBtnText) {
+        startGuidanceBtnText.textContent = locale.startGuidance;
+      }
+
+      const announceText = document.getElementById("announceGuidanceText");
+      if (announceText) {
+        announceText.textContent = locale.announceGuidance;
+      }
+
+      const gpsTitle = document.getElementById("gpsPositionTitle");
+      if (gpsTitle) {
+        gpsTitle.textContent = locale.gpsTitle;
+      }
+
+      const sidebarItems = document.querySelectorAll(".menu-item");
+      const sidebarLabels = [
+        getLocalizedSidebarText("voiceAssistant"),
+        getLocalizedSidebarText("visualAi"),
+        getLocalizedSidebarText("wheelchair"),
+        getLocalizedSidebarText("shuttle")
+      ];
+
+      sidebarItems.forEach((item, index) => {
+        if (index >= sidebarLabels.length) return;
+        const span = item.querySelector("span");
+        if (span) {
+          span.textContent = sidebarLabels[index];
+        } else {
+          Array.from(item.childNodes).forEach((node) => {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+              node.textContent = sidebarLabels[index];
+            }
+          });
+        }
+      });
+
+      const sosButton = document.querySelector(".sos-btn");
+      if (sosButton) {
+        const textNode = Array.from(sosButton.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        if (textNode) {
+          textNode.textContent = getLocalizedSidebarText("sos");
+        }
+      }
+
+      const mobileItems = document.querySelectorAll(".mobile-nav-item");
+      const mobileLabels = [
+        getLocalizedSidebarText("mobileVoice"),
+        getLocalizedSidebarText("mobileVisual"),
+        getLocalizedSidebarText("mobileWheelchair"),
+        getLocalizedSidebarText("mobileShuttle"),
+        getLocalizedSidebarText("mobileSos")
+      ];
+
+      mobileItems.forEach((item, index) => {
+        if (index >= mobileLabels.length) return;
+        const span = item.querySelector("span");
+        if (span) {
+          span.textContent = mobileLabels[index];
+        }
+      });
+
+      if (document.documentElement) {
+        document.documentElement.lang = currentLanguage;
+      }
+    }
+
+    function getLocalizedSpeechText(key) {
+      const locale = languageTranslations[currentLanguage] || languageTranslations["en-IN"];
+      return locale[key] || languageTranslations["en-IN"][key] || "";
+    }
+
+    function speakLocalized(key, interrupt = false) {
+      const text = getLocalizedSpeechText(key);
+      if (text) {
+        speak(text, interrupt);
+      }
+    }
+
+    function updateLanguageSelection() {
+      const languageSelect = document.getElementById("languageSelect");
+      if (languageSelect) {
+        languageSelect.value = currentLanguage;
+      }
+      applyLanguageUI();
+      localStorage.setItem("accessPathLanguage", currentLanguage);
+    }
+
+    let objectDetectionModel = null;
+
+    let detectionRunning = false;
+
+    let detectionAnimationFrame = null;
+
+    let lastVoiceWarning = "";
+
+    let lastVoiceWarningTime = 0;
+
+
+    /* =====================================================
+       CAMPUS ADDRESS
+    ====================================================== */
+
+    const CAMPUS_ADDRESS =
+      "Sathyabama Institute of Science and Technology, Jeppiaar Nagar, Rajiv Gandhi Salai, Chennai, Tamil Nadu 600119";
+
+
+    /* =====================================================
+       GPS
+    ====================================================== */
+
+    function startGPS() {
+
+      const gpsText =
+        document.getElementById("gpsText");
+
+      const coordinates =
+        document.getElementById("coordinates");
+
+
+      if (!navigator.geolocation) {
+
+        gpsText.textContent =
+          "GPS unavailable";
+
+        coordinates.textContent =
+          "Geolocation is not supported.";
+
+        return;
+      }
+
+
+      gpsText.textContent =
+        "GPS locating...";
+
+
+      navigator.geolocation.watchPosition(
+
+        function(position) {
+
+          currentLatitude =
+            position.coords.latitude;
+
+          currentLongitude =
+            position.coords.longitude;
+
+
+          gpsText.textContent =
+            "GPS Active";
+
+
+          coordinates.textContent =
+            `${currentLatitude.toFixed(6)}, ${currentLongitude.toFixed(6)}`;
+
+        },
+
+
+        function(error) {
+
+          console.warn(
+            "GPS error:",
+            error
+          );
+
+
+          gpsText.textContent =
+            "GPS unavailable";
+
+
+          coordinates.textContent =
+            "Location permission required.";
+
+        },
+
+
+        {
+
+          enableHighAccuracy: true,
+
+          timeout: 10000,
+
+          maximumAge: 5000
+
+        }
+
+      );
+
+    }
+
+
+    /* =====================================================
+       LOAD OBJECT DETECTION MODEL
+    ====================================================== */
+
+    async function loadObjectDetectionModel() {
+
+      const aiStatusTitle =
+        document.getElementById(
+          "aiStatusTitle"
+        );
+
+      const aiStatusDescription =
+        document.getElementById(
+          "aiStatusDescription"
+        );
+
+      const aiIndicatorText =
+        document.getElementById(
+          "aiIndicatorText"
+        );
+
+      const obstacleTitle =
+        document.getElementById(
+          "obstacleTitle"
+        );
+
+      const obstacleDescription =
+        document.getElementById(
+          "obstacleDescription"
+        );
+
+
+      try {
+
+        aiStatusTitle.textContent =
+          "Loading Vision AI";
+
+
+        aiStatusDescription.textContent =
+          "Loading the real-time browser object detection model.";
+
+
+        aiIndicatorText.textContent =
+          "AI model loading...";
+
+
+        obstacleTitle.textContent =
+          "Vision AI loading";
+
+
+        obstacleDescription.textContent =
+          "Please wait while the object detection model starts.";
+
+
+        showMessage(
+          "Loading Vision AI model..."
+        );
+
+
+        objectDetectionModel =
+          await cocoSsd.load();
+
+
+        aiStatusTitle.textContent =
+          "Vision AI Ready";
+
+
+        aiStatusDescription.textContent =
+          "Real-time supported object detection is ready.";
+
+
+        aiIndicatorText.textContent =
+          "Object detection ready";
+
+
+        obstacleTitle.textContent =
+          "Detection ready";
+
+
+        obstacleDescription.textContent =
+          "Start the camera to analyze your surroundings.";
+
+
+        showMessage(
+          "Vision AI loaded successfully."
+        );
+
+
+        console.log(
+          "COCO-SSD loaded successfully."
+        );
+
+      }
+
+
+      catch (error) {
+
+        console.error(
+          "Vision AI loading error:",
+          error
+        );
+
+
+        aiStatusTitle.textContent =
+          "Vision AI unavailable";
+
+
+        aiStatusDescription.textContent =
+          "The object detection model could not be loaded.";
+
+
+        aiIndicatorText.textContent =
+          "AI model unavailable";
+
+
+        obstacleTitle.textContent =
+          "Detection unavailable";
+
+
+        obstacleDescription.textContent =
+          "Check your internet connection and reload the page.";
+
+
+        showMessage(
+          "Unable to load Vision AI."
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       CAMERA
+    ====================================================== */
+
+    async function startCamera() {
+
+      const video =
+        document.getElementById(
+          "cameraVideo"
+        );
+
+
+      const placeholder =
+        document.getElementById(
+          "cameraPlaceholder"
+        );
+
+
+      const liveStatus =
+        document.getElementById(
+          "cameraLiveStatus"
+        );
+
+
+      const controls =
+        document.getElementById(
+          "cameraControls"
+        );
+
+
+      const cameraStatus =
+        document.getElementById(
+          "cameraStatus"
+        );
+
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+
+        showMessage(
+          "Camera access is not supported by this browser."
+        );
+
+        speak(
+          "Camera access is not supported by this browser."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        cameraStream =
+          await navigator.mediaDevices.getUserMedia({
+
+            video: {
+
+              facingMode: {
+                ideal: "environment"
+              },
+
+              width: {
+                ideal: 1280
+              },
+
+              height: {
+                ideal: 720
+              }
+
+            },
+
+            audio: false
+
+          });
+
+
+        video.srcObject =
+          cameraStream;
+
+
+        video.style.display =
+          "block";
+
+
+        placeholder.style.display =
+          "none";
+
+
+        liveStatus.style.display =
+          "flex";
+
+
+        controls.style.display =
+          "flex";
+
+
+        cameraStatus.textContent =
+          "LIVE";
+
+
+        cameraRunning =
+          true;
+
+
+        showMessage(
+          "Camera enabled."
+        );
+
+
+        if (objectDetectionModel) {
+
+          startVisualAnalysis();
+
+        }
+
+        else {
+
+          showMessage(
+            "Camera started. Vision AI is still loading."
+          );
+
+          speak(
+            "Camera started. Vision AI is still loading."
+          );
+
+        }
+
+
+        if (selectedDestination) {
+
+          speak(
+            `Visual guidance started for ${selectedDestination}.`
+          );
+
+        }
+
+
+      }
+
+
+      catch (error) {
+
+        console.error(
+          "Camera error:",
+          error
+        );
+
+
+        showMessage(
+          "Camera permission was denied or the camera is unavailable."
+        );
+
+
+        speak(
+          "Camera access is unavailable. Please check your browser camera permission.",
+          true
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       STOP CAMERA
+    ====================================================== */
+
+    function stopCamera() {
+
+      if (cameraStream) {
+
+        cameraStream
+          .getTracks()
+          .forEach(
+            track =>
+              track.stop()
+          );
+
+        cameraStream =
+          null;
+
+      }
+
+
+      if (detectionAnimationFrame) {
+
+        cancelAnimationFrame(
+          detectionAnimationFrame
+        );
+
+        detectionAnimationFrame =
+          null;
+
+      }
+
+
+      const video =
+        document.getElementById(
+          "cameraVideo"
+        );
+
+
+      const placeholder =
+        document.getElementById(
+          "cameraPlaceholder"
+        );
+
+
+      const liveStatus =
+        document.getElementById(
+          "cameraLiveStatus"
+        );
+
+
+      const controls =
+        document.getElementById(
+          "cameraControls"
+        );
+
+
+      const cameraStatus =
+        document.getElementById(
+          "cameraStatus"
+        );
+
+
+      video.srcObject =
+        null;
+
+
+      video.style.display =
+        "none";
+
+
+      placeholder.style.display =
+        "flex";
+
+
+      liveStatus.style.display =
+        "none";
+
+
+      controls.style.display =
+        "none";
+
+
+      cameraStatus.textContent =
+        "READY";
+
+
+      cameraRunning =
+        false;
+
+
+      guidanceRunning =
+        false;
+
+
+      detectionRunning =
+        false;
+
+
+      clearInterval(
+        guidanceInterval
+      );
+
+
+      hideDetectionBoxes();
+
+
+      clearDetectionSummary();
+
+
+      showMessage(
+        "Visual guidance stopped."
+      );
+
+    }
+
+
+    /* =====================================================
+       START GUIDANCE
+    ====================================================== */
+
+    function startGuidance() {
+
+      const select =
+        document.getElementById(
+          "destinationSelect"
+        );
+
+
+      selectedDestination =
+        select.value;
+
+
+      if (!selectedDestination) {
+
+        showMessage(
+          "Please select a campus destination first."
+        );
+
+
+        speak(
+          "Please select your destination first.",
+          true
+        );
+
+
+        select.focus();
+
+        return;
+
+      }
+
+
+      localStorage.setItem(
+        "accessPathDestination",
+        selectedDestination
+      );
+
+
+      sessionStorage.setItem(
+        "accessPathDestination",
+        selectedDestination
+      );
+
+
+      document.getElementById(
+        "aiStatusTitle"
+      ).textContent =
+        "Guiding to " +
+        selectedDestination;
+
+
+      document.getElementById(
+        "aiStatusDescription"
+      ).textContent =
+        "AccessPathAI is preparing visual and voice guidance toward your selected destination.";
+
+
+      document.getElementById(
+        "aiIndicatorText"
+      ).textContent =
+        "Navigation active";
+
+
+      document.getElementById(
+        "stepOne"
+      ).textContent =
+        "Destination confirmed";
+
+
+      document.getElementById(
+        "stepTwo"
+      ).textContent =
+        "Camera guidance ready";
+
+
+      showMessage(
+        `Destination set: ${selectedDestination}`
+      );
+
+
+      speak(
+        `Destination selected: ${selectedDestination}.`,
+        true
+      );
+
+
+      if (!cameraRunning) {
+
+        setTimeout(
+          startCamera,
+          500
+        );
+
+      }
+
+      else {
+
+        startVisualAnalysis();
+
+      }
+
+    }
+
+
+    /* =====================================================
+       START VISUAL ANALYSIS
+    ====================================================== */
+
+    function startVisualAnalysis() {
+
+      if (!cameraRunning) {
+        return;
+      }
+
+
+      if (!objectDetectionModel) {
+
+        showMessage(
+          "Vision AI is still loading."
+        );
+
+        return;
+
+      }
+
+
+      guidanceRunning =
+        true;
+
+
+      detectionRunning =
+        true;
+
+
+      clearInterval(
+        guidanceInterval
+      );
+
+
+      const cameraStatus =
+        document.getElementById(
+          "cameraStatus"
+        );
+
+
+      cameraStatus.textContent =
+        "AI LIVE";
+
+
+      document.getElementById(
+        "aiStatusDescription"
+      ).textContent =
+        "Real-time AI is detecting supported people, objects and vehicles in the camera view.";
+
+
+      document.getElementById(
+        "aiIndicatorText"
+      ).textContent =
+        "Real-time detection active";
+
+
+      runObjectDetection();
+
+    }
+
+
+    /* =====================================================
+       REAL-TIME OBJECT DETECTION
+    ====================================================== */
+
+    async function runObjectDetection() {
+
+      if (
+        !cameraRunning ||
+        !guidanceRunning ||
+        !objectDetectionModel
+      ) {
+
+        return;
+
+      }
+
+
+      const video =
+        document.getElementById(
+          "cameraVideo"
+        );
+
+
+      const canvas =
+        document.getElementById(
+          "detectionCanvas"
+        );
+
+
+      if (
+        video.readyState <
+        HTMLMediaElement.HAVE_CURRENT_DATA
+      ) {
+
+        detectionAnimationFrame =
+          requestAnimationFrame(
+            runObjectDetection
+          );
+
+        return;
+
+      }
+
+
+      try {
+
+        const predictions =
+          await objectDetectionModel.detect(
+            video,
+            20,
+            0.45
+          );
+
+
+        drawDetections(
+          predictions,
+          video,
+          canvas
+        );
+
+
+        processSafetyAnalysis(
+          predictions,
+          video
+        );
+
+      }
+
+
+      catch (error) {
+
+        console.error(
+          "Object detection error:",
+          error
+        );
+
+      }
+
+
+      detectionAnimationFrame =
+        requestAnimationFrame(
+          runObjectDetection
+        );
+
+    }
+
+
+    /* =====================================================
+       DRAW DETECTION BOXES
+    ====================================================== */
+
+    function drawDetections(
+      predictions,
+      video,
+      canvas
+    ) {
+
+      const ctx =
+        canvas.getContext("2d");
+
+
+      const rect =
+        video.getBoundingClientRect();
+
+
+      canvas.width =
+        rect.width;
+
+
+      canvas.height =
+        rect.height;
+
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+
+      if (!predictions.length) {
+        return;
+      }
+
+
+      const videoWidth =
+        video.videoWidth;
+
+
+      const videoHeight =
+        video.videoHeight;
+
+
+      if (
+        !videoWidth ||
+        !videoHeight
+      ) {
+
+        return;
+
+      }
+
+
+      const scale =
+        Math.max(
+          canvas.width / videoWidth,
+          canvas.height / videoHeight
+        );
+
+
+      const displayedWidth =
+        videoWidth * scale;
+
+
+      const displayedHeight =
+        videoHeight * scale;
+
+
+      const offsetX =
+        (
+          canvas.width -
+          displayedWidth
+        ) / 2;
+
+
+      const offsetY =
+        (
+          canvas.height -
+          displayedHeight
+        ) / 2;
+
+
+      predictions.forEach(
+        prediction => {
+
+          const [
+            x,
+            y,
+            width,
+            height
+          ] =
+            prediction.bbox;
+
+
+          const drawX =
+            x * scale +
+            offsetX;
+
+
+          const drawY =
+            y * scale +
+            offsetY;
+
+
+          const drawWidth =
+            width * scale;
+
+
+          const drawHeight =
+            height * scale;
+
+
+          const severity =
+            getObjectSeverity(
+              prediction.class,
+              prediction.score,
+              drawX,
+              drawY,
+              drawWidth,
+              drawHeight,
+              canvas
+            );
+
+
+          if (
+            severity === "danger"
+          ) {
+
+            ctx.strokeStyle =
+              "#ef4444";
+
+          }
+
+          else if (
+            severity === "warning"
+          ) {
+
+            ctx.strokeStyle =
+              "#f59e0b";
+
+          }
+
+          else {
+
+            ctx.strokeStyle =
+              "#22c55e";
+
+          }
+
+
+          ctx.lineWidth =
+            4;
+
+
+          ctx.strokeRect(
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight
+          );
+
+
+          const label =
+            `${prediction.class} ${Math.round(
+              prediction.score * 100
+            )}%`;
+
+
+          ctx.font =
+            "bold 13px Arial";
+
+
+          const textWidth =
+            ctx.measureText(
+              label
+            ).width;
+
+
+          ctx.fillStyle =
+            "rgba(0,0,0,.75)";
+
+
+          ctx.fillRect(
+            drawX,
+            Math.max(
+              0,
+              drawY - 25
+            ),
+            textWidth + 12,
+            25
+          );
+
+
+          if (
+            severity === "danger"
+          ) {
+
+            ctx.fillStyle =
+              "#ff4d4d";
+
+          }
+
+          else if (
+            severity === "warning"
+          ) {
+
+            ctx.fillStyle =
+              "#ffd166";
+
+          }
+
+          else {
+
+            ctx.fillStyle =
+              "#4ade80";
+
+          }
+
+
+          ctx.fillText(
+            label,
+            drawX + 6,
+            Math.max(
+              17,
+              drawY - 8
+            )
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       OBJECT SEVERITY
+    ====================================================== */
+
+    function getObjectSeverity(
+      objectClass,
+      score,
+      x,
+      y,
+      width,
+      height,
+      canvas
+    ) {
+
+      const importantObjects = [
+
+        "person",
+        "car",
+        "bus",
+        "truck",
+        "motorcycle",
+        "bicycle",
+        "train",
+        "boat",
+        "traffic light",
+        "stop sign",
+        "bench",
+        "chair",
+        "couch",
+        "dining table",
+        "suitcase",
+        "backpack"
+
+      ];
+
+
+      if (
+        !importantObjects.includes(
+          objectClass
+        )
+      ) {
+
+        return "safe";
+
+      }
+
+
+      const centerX =
+        x + width / 2;
+
+
+      const centerY =
+        y + height / 2;
+
+
+      const cameraCenterX =
+        canvas.width / 2;
+
+
+      const cameraCenterY =
+        canvas.height / 2;
+
+
+      const horizontalDistance =
+        Math.abs(
+          centerX -
+          cameraCenterX
+        ) /
+        canvas.width;
+
+
+      const verticalDistance =
+        Math.abs(
+          centerY -
+          cameraCenterY
+        ) /
+        canvas.height;
+
+
+      const centralObject =
+        horizontalDistance < .32 &&
+        verticalDistance < .35;
+
+
+      const objectArea =
+        (
+          width *
+          height
+        ) /
+        (
+          canvas.width *
+          canvas.height
+        );
+
+
+      const closeObject =
+        objectArea > .10;
+
+
+      if (
+
+        (
+          objectClass === "person" ||
+          objectClass === "car" ||
+          objectClass === "bus" ||
+          objectClass === "truck" ||
+          objectClass === "motorcycle" ||
+          objectClass === "bicycle"
+        ) &&
+
+        centralObject &&
+
+        closeObject
+
+      ) {
+
+        return "danger";
+
+      }
+
+
+      if (
+        centralObject ||
+        closeObject
+      ) {
+
+        return "warning";
+
+      }
+
+
+      return "safe";
+
+    }
+
+
+    /* =====================================================
+       SAFETY ANALYSIS
+    ====================================================== */
+
+    function processSafetyAnalysis(
+      predictions,
+      video
+    ) {
+
+      updateDetectionSummary(
+        predictions
+      );
+
+
+      const obstacleStatus =
+        document.getElementById(
+          "obstacleStatus"
+        );
+
+
+      const obstacleTitle =
+        document.getElementById(
+          "obstacleTitle"
+        );
+
+
+      const obstacleDescription =
+        document.getElementById(
+          "obstacleDescription"
+        );
+
+
+      const distanceStatus =
+        document.getElementById(
+          "distanceStatus"
+        );
+
+
+      if (!predictions.length) {
+
+        setClearPathState();
+
+        return;
+
+      }
+
+
+      const rect =
+        video.getBoundingClientRect();
+
+
+      const canvas = {
+
+        width:
+          rect.width,
+
+        height:
+          rect.height
+
+      };
+
+
+      const detectedObjects =
+        predictions.map(
+          prediction => {
+
+            const [
+              x,
+              y,
+              width,
+              height
+            ] =
+              prediction.bbox;
+
+
+            const scale =
+              Math.max(
+                canvas.width /
+                  video.videoWidth,
+
+                canvas.height /
+                  video.videoHeight
+              );
+
+
+            const drawX =
+              x * scale +
+              (
+                canvas.width -
+                video.videoWidth *
+                scale
+              ) / 2;
+
+
+            const drawY =
+              y * scale +
+              (
+                canvas.height -
+                video.videoHeight *
+                scale
+              ) / 2;
+
+
+            const drawWidth =
+              width * scale;
+
+
+            const drawHeight =
+              height * scale;
+
+
+            const severity =
+              getObjectSeverity(
+                prediction.class,
+                prediction.score,
+                drawX,
+                drawY,
+                drawWidth,
+                drawHeight,
+                canvas
+              );
+
+
+            return {
+
+              name:
+                prediction.class,
+
+              score:
+                prediction.score,
+
+              severity
+
+            };
+
+          }
+        );
+
+
+      const dangerousObjects =
+        detectedObjects.filter(
+          object =>
+            object.severity ===
+            "danger"
+        );
+
+
+      const warningObjects =
+        detectedObjects.filter(
+          object =>
+            object.severity ===
+            "warning"
+        );
+
+
+      /* ===================================================
+         DANGER
+      ================================================== */
+
+      if (
+        dangerousObjects.length
+      ) {
+
+        const object =
+          dangerousObjects[0];
+
+
+        obstacleStatus.style.background =
+          "var(--red-soft)";
+
+
+        obstacleStatus.style.borderColor =
+          "#fecaca";
+
+
+        obstacleTitle.style.color =
+          "#b91c1c";
+
+
+        obstacleDescription.style.color =
+          "#991b1b";
+
+
+        obstacleStatus
+          .querySelector(
+            ".obstacle-status-icon"
+          )
+          .style.color =
+          "var(--red)";
+
+
+        obstacleTitle.textContent =
+          `⚠ ${capitalize(
+            object.name
+          )} detected ahead`;
+
+
+        obstacleDescription.textContent =
+          `${dangerousObjects.length} nearby object${
+            dangerousObjects.length > 1
+              ? "s"
+              : ""
+          } detected in the likely path area.`;
+
+
+        distanceStatus.textContent =
+          `⚠ ${capitalize(
+            object.name
+          )} Ahead`;
+
+
+        announceObjectWarning(
+          object.name,
+          "danger"
+        );
+
+
+        return;
+
+      }
+
+
+      /* ===================================================
+         WARNING
+      ================================================== */
+
+      if (
+        warningObjects.length
+      ) {
+
+        const object =
+          warningObjects[0];
+
+
+        obstacleStatus.style.background =
+          "var(--orange-soft)";
+
+
+        obstacleStatus.style.borderColor =
+          "#fed7aa";
+
+
+        obstacleTitle.style.color =
+          "#9a3412";
+
+
+        obstacleDescription.style.color =
+          "#9a3412";
+
+
+        obstacleStatus
+          .querySelector(
+            ".obstacle-status-icon"
+          )
+          .style.color =
+          "var(--orange)";
+
+
+        obstacleTitle.textContent =
+          `Caution: ${capitalize(
+            object.name
+          )} detected`;
+
+
+        obstacleDescription.textContent =
+          "An object is visible near the likely walking area. Proceed carefully.";
+
+
+        distanceStatus.textContent =
+          `Caution: ${capitalize(
+            object.name
+          )}`;
+
+
+        announceObjectWarning(
+          object.name,
+          "warning"
+        );
+
+
+        return;
+
+      }
+
+
+      /* ===================================================
+         OBJECTS OUTSIDE PATH
+      ================================================== */
+
+      obstacleStatus.style.background =
+        "var(--green-soft)";
+
+
+      obstacleStatus.style.borderColor =
+        "#ccebd6";
+
+
+      obstacleTitle.style.color =
+        "#126332";
+
+
+      obstacleDescription.style.color =
+        "#477455";
+
+
+      obstacleStatus
+        .querySelector(
+          ".obstacle-status-icon"
+        )
+        .style.color =
+        "var(--green)";
+
+
+      obstacleTitle.textContent =
+        `${predictions.length} object${
+          predictions.length > 1
+            ? "s"
+            : ""
+        } detected`;
+
+
+      obstacleDescription.textContent =
+        "Objects are visible, but no immediate path obstruction was detected.";
+
+
+      distanceStatus.textContent =
+        "Path Clear*";
+
+    }
+
+
+    /* =====================================================
+       CLEAR PATH
+    ====================================================== */
+
+    function setClearPathState() {
+
+      const obstacleStatus =
+        document.getElementById(
+          "obstacleStatus"
+        );
+
+
+      const obstacleTitle =
+        document.getElementById(
+          "obstacleTitle"
+        );
+
+
+      const obstacleDescription =
+        document.getElementById(
+          "obstacleDescription"
+        );
+
+
+      const distanceStatus =
+        document.getElementById(
+          "distanceStatus"
+        );
+
+
+      obstacleStatus.style.background =
+        "var(--green-soft)";
+
+
+      obstacleStatus.style.borderColor =
+        "#ccebd6";
+
+
+      obstacleTitle.style.color =
+        "#126332";
+
+
+      obstacleDescription.style.color =
+        "#477455";
+
+
+      obstacleStatus
+        .querySelector(
+          ".obstacle-status-icon"
+        )
+        .style.color =
+        "var(--green)";
+
+
+      obstacleTitle.textContent =
+        "No detected obstacle";
+
+
+      obstacleDescription.textContent =
+        "No immediate obstacle was detected in the camera view. Continue carefully.";
+
+
+      distanceStatus.textContent =
+        "No Obstacle Detected";
+
+
+      announceClearPath();
+
+    }
+
+
+    /* =====================================================
+       DETECTION SUMMARY
+    ====================================================== */
+
+    function updateDetectionSummary(
+      predictions
+    ) {
+
+      const container =
+        document.getElementById(
+          "detectionSummary"
+        );
+
+
+      container.innerHTML =
+        "";
+
+
+      if (!predictions.length) {
+        return;
+      }
+
+
+      const names =
+        [];
+
+
+      predictions.forEach(
+        prediction => {
+
+          if (
+            !names.includes(
+              prediction.class
+            )
+          ) {
+
+            names.push(
+              prediction.class
+            );
+
+          }
+
+        }
+      );
+
+
+      names.slice(
+        0,
+        12
+      ).forEach(
+        name => {
+
+          const tag =
+            document.createElement(
+              "span"
+            );
+
+
+          tag.className =
+            "detection-tag";
+
+
+          tag.textContent =
+            capitalize(name);
+
+
+          container.appendChild(
+            tag
+          );
+
+        }
+      );
+
+    }
+
+
+    function clearDetectionSummary() {
+
+      const container =
+        document.getElementById(
+          "detectionSummary"
+        );
+
+
+      container.innerHTML =
+        "";
+
+    }
+
+
+    /* =====================================================
+       VOICE WARNING
+    ====================================================== */
+
+    function announceObjectWarning(
+      objectName,
+      severity
+    ) {
+
+      const now =
+        Date.now();
+
+
+      if (
+
+        lastVoiceWarning ===
+          objectName &&
+
+        now -
+          lastVoiceWarningTime <
+          5000
+
+      ) {
+
+        return;
+
+      }
+
+
+      lastVoiceWarning =
+        objectName;
+
+
+      lastVoiceWarningTime =
+        now;
+
+
+      if (
+        severity === "danger"
+      ) {
+
+        speak(
+
+          `Warning. ${objectName} detected ahead. Please slow down and check your path.`,
+
+          true
+
+        );
+
+      }
+
+      else {
+
+        speak(
+
+          `Caution. ${objectName} detected nearby. Please proceed carefully.`,
+
+          false
+
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       CLEAR PATH VOICE
+    ====================================================== */
+
+    function announceClearPath() {
+
+      const now =
+        Date.now();
+
+
+      if (
+        now -
+        lastVoiceWarningTime <
+        8000
+      ) {
+
+        return;
+
+      }
+
+
+      lastVoiceWarning =
+        "__CLEAR__";
+
+
+      lastVoiceWarningTime =
+        now;
+
+
+      speak(
+
+        "No immediate obstacle detected in the camera view. Continue carefully.",
+
+        false
+
+      );
+
+    }
+
+
+    /* =====================================================
+       CAPITALIZE
+    ====================================================== */
+
+    function capitalize(
+      text
+    ) {
+
+      return text.charAt(0)
+        .toUpperCase() +
+        text.slice(1);
+
+    }
+
+
+    /* =====================================================
+       HIDE DETECTION BOXES
+    ====================================================== */
+
+    function hideDetectionBoxes() {
+
+      const canvas =
+        document.getElementById(
+          "detectionCanvas"
+        );
+
+
+      if (!canvas) {
+        return;
+      }
+
+
+      const ctx =
+        canvas.getContext("2d");
+
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+    }
+
+
+    /* =====================================================
+       TOGGLE GUIDANCE
+    ====================================================== */
+
+    function toggleGuidance() {
+
+      const button =
+        document.getElementById(
+          "guidanceToggle"
+        );
+
+
+      if (guidanceRunning) {
+
+        guidanceRunning =
+          false;
+
+
+        detectionRunning =
+          false;
+
+
+        if (detectionAnimationFrame) {
+
+          cancelAnimationFrame(
+            detectionAnimationFrame
+          );
+
+          detectionAnimationFrame =
+            null;
+
+        }
+
+
+        button.innerHTML =
+          '<i data-lucide="play"></i>';
+
+
+        document.getElementById(
+          "cameraStatus"
+        ).textContent =
+          "PAUSED";
+
+
+        showMessage(
+          getLocalizedSpeechText("guidancePaused")
+        );
+
+
+        speakLocalized(
+          "guidancePaused",
+          true
+        );
+
+      }
+
+
+      else {
+
+        if (!cameraRunning) {
+
+          startCamera();
+
+          return;
+
+        }
+
+
+        guidanceRunning =
+          true;
+
+
+        detectionRunning =
+          true;
+
+
+        startVisualAnalysis();
+
+
+        button.innerHTML =
+          '<i data-lucide="pause"></i>';
+
+
+        showMessage(
+          getLocalizedSpeechText("guidanceResumed")
+        );
+
+
+        speakLocalized(
+          "guidanceResumed",
+          true
+        );
+
+      }
+
+
+      lucide.createIcons();
+
+    }
+
+
+    /* =====================================================
+       VOICE GUIDANCE
+    ====================================================== */
+
+    function announceGuidance() {
+
+      if (!selectedDestination) {
+
+        speakLocalized(
+          "selectDestinationMessage",
+          true
+        );
+
+
+        showMessage(
+          getLocalizedText("destinationLabel") + ""
+        );
+
+
+        return;
+
+      }
+
+
+      let message =
+        getLocalizedText("areaGuidance");
+
+
+      message +=
+        ` ${getLocalizedText("destinationText")} ${selectedDestination}. `;
+
+
+      if (
+        currentLatitude !== null &&
+        currentLongitude !== null
+      ) {
+
+        message +=
+          getLocalizedText("gpsActive");
+
+      }
+
+
+      if (guidanceRunning) {
+
+        message +=
+          " ";
+        message +=
+          getLocalizedText("aiStatusLoadingText") || "Real-time object detection is active.";
+
+      }
+
+      else {
+
+        message +=
+          " ";
+        message +=
+          getLocalizedText("startCameraText");
+
+      }
+
+
+      message +=
+        " " + (getLocalizedText("pathWarning") || "The system will warn you when supported objects appear near the likely walking path. Continue carefully.");
+
+
+      speak(
+        message,
+        true
+      );
+
+
+      showMessage(
+        getLocalizedText("guidanceAnnounced")
+      );
+
+    }
+
+
+    /* =====================================================
+       SPEECH
+    ====================================================== */
+
+    function speak(
+      text,
+      interrupt = false
+    ) {
+
+      if (
+        !("speechSynthesis" in window)
+      ) {
+
+        return;
+
+      }
+
+
+      if (interrupt) {
+
+        speechSynthesis.cancel();
+
+      }
+
+
+      const utterance =
+        new SpeechSynthesisUtterance(
+          text
+        );
+
+
+      utterance.lang =
+        currentLanguage;
+
+
+      utterance.rate =
+        .88;
+
+
+      utterance.pitch =
+        1;
+
+
+      speechSynthesis.speak(
+        utterance
+      );
+
+    }
+
+
+    /* =====================================================
+       SOS
+    ====================================================== */
+
+    function triggerSOS() {
+
+      if (navigator.vibrate) {
+
+        navigator.vibrate([
+          200,
+          100,
+          200
+        ]);
+
+      }
+
+
+      speakLocalized(
+        "emergencySos",
+        true
+      );
+
+
+      let message =
+        "EMERGENCY SOS\n\nCall emergency services 112?";
+
+
+      if (
+        currentLatitude !== null &&
+        currentLongitude !== null
+      ) {
+
+        message +=
+          `\n\nCurrent GPS:\n${currentLatitude.toFixed(6)}, ${currentLongitude.toFixed(6)}`;
+
+      }
+
+
+      fetch("/api/sos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: currentLatitude,
+          lng: currentLongitude,
+          page: "virtual",
+          message: message
+        })
+      }).catch(function(error) {
+        console.log("SOS log failed:", error);
+      });
+
+
+      const confirmSOS =
+        confirm(message);
+
+
+      if (confirmSOS) {
+
+        window.location.href =
+          "tel:112";
+
+      }
+
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    function showMessage(
+      text
+    ) {
+
+      const box =
+        document.getElementById(
+          "messageBox"
+        );
+
+
+      box.textContent =
+        text;
+
+
+      box.classList.add(
+        "show"
+      );
+
+
+      clearTimeout(
+        window.messageTimeout
+      );
+
+
+      window.messageTimeout =
+        setTimeout(
+          function() {
+
+            box.classList.remove(
+              "show"
+            );
+
+          },
+          4500
+        );
+
+    }
+
+
+    /* =====================================================
+       LANGUAGE
+    ====================================================== */
+
+    document
+      .getElementById(
+        "languageSelect"
+      )
+      .addEventListener(
+        "change",
+        function() {
+
+          currentLanguage =
+            this.value;
+
+          updateLanguageSelection();
+
+          showMessage(
+            getLocalizedSpeechText("languageChanged")
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       LOAD SAVED DESTINATION
+    ====================================================== */
+
+    function loadSavedDestination() {
+
+      const saved =
+        sessionStorage.getItem(
+          "accessPathDestination"
+        ) ||
+        localStorage.getItem(
+          "accessPathDestination"
+        );
+
+
+      if (!saved) {
+        return;
+      }
+
+
+      const select =
+        document.getElementById(
+          "destinationSelect"
+        );
+
+
+      const option =
+        [...select.options]
+          .find(
+            option =>
+              option.value ===
+              saved
+          );
+
+
+      if (option) {
+
+        select.value =
+          saved;
+
+
+        selectedDestination =
+          saved;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       DESTINATION CHANGE
+    ====================================================== */
+
+    document
+      .getElementById(
+        "destinationSelect"
+      )
+      .addEventListener(
+        "change",
+        function() {
+
+          selectedDestination =
+            this.value;
+
+
+          if (!selectedDestination) {
+
+            return;
+
+          }
+
+
+          localStorage.setItem(
+            "accessPathDestination",
+            selectedDestination
+          );
+
+
+          sessionStorage.setItem(
+            "accessPathDestination",
+            selectedDestination
+          );
+
+
+          document.getElementById(
+            "aiStatusTitle"
+          ).textContent =
+            "Ready for " +
+            selectedDestination;
+
+
+          document.getElementById(
+            "aiStatusDescription"
+          ).textContent =
+            "Start visual guidance to receive AI assistance toward " +
+            selectedDestination +
+            ".";
+
+
+          document.getElementById(
+            "stepOne"
+          ).textContent =
+            "Destination selected";
+
+
+          showMessage(
+            `Destination selected: ${selectedDestination}`
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       PAGE LOAD
+    ====================================================== */
+
+    window.addEventListener(
+      "load",
+      async function() {
+
+        const savedLanguage = localStorage.getItem("accessPathLanguage");
+        if (savedLanguage && languageTranslations[savedLanguage]) {
+          currentLanguage = savedLanguage;
+        }
+
+        updateLanguageSelection();
+
+        loadSavedDestination();
+
+        await loadObjectDetectionModel();
+
+      }
+    );
+
+
+    /* =====================================================
+       VISIBILITY
+    ====================================================== */
+
+    document.addEventListener(
+      "visibilitychange",
+      function() {
+
+        if (
+          document.hidden &&
+          "speechSynthesis" in window
+        ) {
+
+          speechSynthesis.cancel();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       PAGE EXIT
+    ====================================================== */
+
+    window.addEventListener(
+      "beforeunload",
+      function() {
+
+        if (cameraStream) {
+
+          cameraStream
+            .getTracks()
+            .forEach(
+              track =>
+                track.stop()
+            );
+
+        }
+
+
+        if (
+          "speechSynthesis" in window
+        ) {
+
+          speechSynthesis.cancel();
+
+        }
+
+
+        if (detectionAnimationFrame) {
+
+          cancelAnimationFrame(
+            detectionAnimationFrame
+          );
+
+        }
+
+
+        clearInterval(
+          guidanceInterval
+        );
+
+      }
+    );
+
+  </script>
+
+</body>
+
+</html>
