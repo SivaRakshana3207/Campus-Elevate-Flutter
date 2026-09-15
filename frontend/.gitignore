@@ -43,3 +43,30 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Python virtual environment
+**/.venv/
+**/venv/
+**/env/
+
+# Environment variables / secrets
+**/.env
+**/.env.*
+!.env.example
+
+# Python tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases
+# Uncomment if you do NOT want to upload the local database
+# **/*.db
+# **/*.sqlite
+# **/*.sqlite3
